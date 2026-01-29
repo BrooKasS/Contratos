@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Seguimiento de Contratos</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header>
+    <h1>Seguimiento de Contratos</h1>
+  </header>
+
+  <!-- ================= SUBIR ARCHIVO ================= -->
+  <section class="card">
+    <h2>📁 Subir contrato (Excel)</h2>
+    <input type="file" id="fileInput" />
+    <button id="uploadBtn">Procesar contrato</button>
+    <p id="status"></p>
+  </section>
+
+  <!-- ================= RESUMEN ================= -->
+  <section id="resumen" class="card"></section>
+
+  <!-- ================= SEGUIMIENTO ================= -->
+  <section id="seguimiento" class="card hidden">
+    <h2>📌 Seguimiento de contratos</h2>
+
+    <div class="filters">
+      <label>
+        Proveedor:
+        <select id="filtroProveedor">
+          <option value="">Todos</option>
+        </select>
+      </label>
+
+      <!-- 🔹 FILTRO NUEVO (NO SE ELIMINA NADA) -->
+      <label>
+        N° Contrato:
+        <input type="text" id="filtroNumero" placeholder="Ej: 1-9000-145-2025">
+      </label>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>N° Contrato</th>
+          <th>Proveedor</th>
+          <th>Valor</th>
+          <th>Pagado</th>
+          <th>Saldo</th>
+          <th>% Ejecución</th>
+        </tr>
+      </thead>
+      <tbody id="tablaSeguimiento"></tbody>
+    </table>
+  </section>
+
+  <!-- ================= DETALLE ================= -->
+  <section id="detalleContrato" class="card hidden"></section>
+
+  <!-- ================= DETALLE TÉCNICO ================= -->
+  <section class="card">
+    <h2> Detalle técnico del contrato</h2>
+    <div id="tabs" class="tabs hidden">
+      <button data-tab="generalidades">Generalidades</button>
+      <button data-tab="principal">Principal</button>
+      <button data-tab="crp">CRP</button>
+      <button data-tab="polizas">Pólizas</button>
+      <button data-tab="otrosies">Otrosíes</button>
+      <button data-tab="pagos">Pagos</button>
+    </div>
+
+   <div id="contenido"><div>  
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>
