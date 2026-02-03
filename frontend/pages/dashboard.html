@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Contratos</title>
+    <link rel="stylesheet" href="../styles/dashboard.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <h1>📊 Dashboard de Contratos</h1>
+            <div class="nav-links">
+                <a href="../index.html">Inicio</a>
+                <a href="upload.html">Subir</a>
+                <a href="dashboard.html" class="active">Contratos</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="filters-card">
+            <h3>🔍 Filtros</h3>
+            <div class="filters-grid">
+                <input type="text" id="searchProveedor" placeholder="Buscar por proveedor...">
+                <input type="text" id="searchNumero" placeholder="Buscar por número...">
+                <button id="btnBuscar">Buscar</button>
+                <button id="btnLimpiar" class="btn-secondary">Limpiar</button>
+            </div>
+        </div>
+
+        <div class="stats-card">
+            <div class="stat-icon">📄</div>
+            <div>
+                <h4>Total Contratos</h4>
+                <p id="totalContratos">0</p>
+            </div>
+        </div>
+
+        <div class="contratos-section">
+            <div class="section-header">
+                <h2>Contratos</h2>
+                <span id="resultadosCount" class="badge">0</span>
+            </div>
+
+            <div id="loadingSpinner" class="loading">
+                <div class="spinner"></div>
+                <p>Cargando...</p>
+            </div>
+
+            <div id="contratosGrid" class="grid"></div>
+
+            <div id="noResults" class="no-results" style="display: none;">
+                <p>🔍 No se encontraron contratos</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/dashboard.js"></script>
+</body>
+</html>

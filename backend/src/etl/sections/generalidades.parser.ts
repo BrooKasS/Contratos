@@ -26,7 +26,7 @@ function readValueOnSameRow(row: any[], labelCol: number, maxOffset: number = 10
     const val = cellText(row[labelCol + offset]);
     const normalized = normalize(val);
     
-    // Saltar labels comunes que no son valores
+
     if (normalized && 
         !normalized.includes("dependencia") &&
         !normalized.includes("tipo de contrato") &&

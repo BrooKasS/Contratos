@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subir Contrato</title>
+    <link rel="stylesheet" href="../styles/upload.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <h1>📄 Sistema de Contratos</h1>
+            <div class="nav-links">
+                <a href="../index.html">Inicio</a>
+                <a href="upload.html" class="active">Subir</a>
+                <a href="dashboard.html">Contratos</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="upload-card">
+            <div class="upload-icon">📤</div>
+            <h2>Subir Nuevo Contrato</h2>
+            <p>Selecciona un archivo Excel (.xlsx o .xls)</p>
+            
+            <form id="uploadForm">
+                <div class="file-input-wrapper">
+                    <input type="file" id="fileInput" accept=".xlsx,.xls" required>
+                    <label for="fileInput" id="fileLabel">
+                        <span class="file-icon">📁</span>
+                        <span class="file-text">Seleccionar archivo</span>
+                    </label>
+                </div>
+                
+                <button type="submit" id="uploadBtn" disabled>
+                    <span id="btnText">Subir Contrato</span>
+                    <span id="btnLoader" style="display: none;">⏳ Procesando...</span>
+                </button>
+            </form>
+
+            <div id="message" class="message" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script src="../js/upload.js"></script>
+</body>
+</html>

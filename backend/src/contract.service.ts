@@ -1,4 +1,4 @@
-// src/contract.service.ts
+// la ruta es src.contract.service
 
 import { extraerCRP } from "./etl/sections/crp.parser";
 import { extraerPolizas } from "./etl/sections/polizas.parser";
@@ -9,7 +9,7 @@ import { extraerGeneralidades } from "./etl/sections/generalidades.parser";
 
 export function extraerContratoCompleto(
   buffer: Buffer,
-  fileName: string
+  fileName: string,
 ) {
   return {
     generalidades: extraerGeneralidades(buffer, fileName),
@@ -18,6 +18,7 @@ export function extraerContratoCompleto(
     polizas: extraerPolizas(buffer, fileName),
     otrosies: extraerOtrosi(buffer, fileName),
     pagos: extraerPagoActual(buffer, fileName),
+
     createdAt: new Date()
   };
 }
