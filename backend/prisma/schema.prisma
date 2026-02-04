@@ -23,7 +23,7 @@ model Contrato {
   fechaInforme    DateTime?
   generalidades   Json
   principal       Json
-  crp             Json
+  crp             Json 
   polizas         Json
   otrosies        Json
   pagos           Json

@@ -11,6 +11,7 @@ import { extraerPagoActual } from "./etl/sections/pagoAct.parser";
 import { extraerGeneralidades } from "./etl/sections/generalidades.parser";
 import { extraerContratoCompleto } from "./contract.service";
 
+
 function limpiarUndefined(obj: any): any {
   if (Array.isArray(obj)) {
     return obj
@@ -104,7 +105,7 @@ app.post("/api/upload/contrato", async (req: any, res) => {
   }
 });
 
-// --------------------- CONTRATOS CON ID ESPECÍFICO ---------------------
+// --------------------- CONTRATOS CON ID ESPECIFICO ---------------------
 app.get("/api/contratos/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -285,6 +286,7 @@ app.get("/api/contratos", async (req, res) => {
 
 // iniciar el servidor
 const PORT = process.env.PORT ?? 3000;
+
 app.listen(PORT, () => {
   console.log(`Servidor listo: http://localhost:${PORT}`);
   console.log(`CRP:     POST /api/upload/crp (campo 'informe')`);

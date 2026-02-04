@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle del Contrato</title>
+    <link rel="stylesheet" href="../styles/detalle.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <h1>📄 Detalle del Contrato</h1>
+            <div class="nav-links">
+                <a href="../index.html">Inicio</a>
+                <a href="upload.html">Subir</a>
+                <a href="dashboard.html">Contratos</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- LOADING -->
+    <div id="loadingSpinner" class="loading">
+        <div class="spinner"></div>
+        <p>Cargando contrato...</p>
+    </div>
+
+    <!-- ERROR -->
+    <div id="errorContainer" class="error-container" style="display: none;">
+        <div class="error-icon">⚠️</div>
+        <h2>Error</h2>
+        <p id="errorMessage"></p>
+        <a href="dashboard.html" class="btn-volver">← Volver al Dashboard</a>
+    </div>
+
+    <!-- CONTENIDO CONTRATO -->
+    <div id="contratoContent" class="container" style="display: none;">
+
+        <!-- HEADER -->
+        <div class="header-card">
+            <div class="header-top">
+                <div>
+                    <h2 id="numeroContrato"></h2>
+                    <span id="tipoContrato" class="badge"></span>
+                </div>
+                <a href="dashboard.html" class="btn-volver-small">← Volver</a>
+            </div>
+            <div class="header-grid">
+                <div class="info-item">
+                    <span class="label">🏢 Proveedor</span>
+                    <span id="proveedor" class="value"></span>
+                </div>
+                <div class="info-item">
+                    <span class="label">📅 Fecha Informe</span>
+                    <span id="fechaInforme" class="value"></span>
+                </div>
+                <div class="info-item">
+                    <span class="label">🆔 ID</span>
+                    <span id="contratoId" class="value"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABS -->
+        <div class="tabs">
+            <button class="tab active" data-tab="generalidades">📋 Generalidades</button>
+            <button class="tab" data-tab="principal">📝 Principal</button>
+            <button class="tab" data-tab="crp">💰 CRP</button>
+            <button class="tab" data-tab="polizas">🛡️ Pólizas</button>
+            <button class="tab" data-tab="otrosies">📑 Otrosíes</button>
+            <button class="tab" data-tab="pagos">💵 Pagos</button>
+        </div>
+
+        <!-- TAB CONTENT -->
+
+        <!-- GENERALIDADES -->
+        <div id="generalidades" class="tab-content active">
+            <div class="section-card">
+                <h3>📋 Información General</h3>
+                <div id="generalidadesGrid" class="info-grid"></div>
+            </div>
+        </div>
+
+        <!-- PRINCIPAL -->
+        <div id="principal" class="tab-content">
+            <div class="section-card">
+                <h3>📝 Contrato Principal</h3>
+                <div id="principalGrid" class="info-grid"></div>
+            </div>
+        </div>
+
+        <!-- CRP -->
+        <div id="crp" class="tab-content">
+            <div class="section-card">
+                <h3>💰 Certificados de Registro Presupuestal</h3>
+                <div id="crpTotal" class="total-badge" style="display: none;"></div>
+                <div id="crpTable" class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Fecha</th>
+                                <th>Número</th>
+                                <th>Código</th>
+                                <th>Rubro</th>
+                                <th>Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="crpTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- PÓLIZAS -->
+        <div id="polizas" class="tab-content">
+            <div class="section-card">
+                <h3>🛡️ Pólizas</h3>
+                <div id="polizasTotal" class="total-badge" style="display: none;"></div>
+                <div id="polizasTable" class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Aseguradora</th>
+                                <th>No. Póliza</th>
+                                <th>Amparos</th>
+                                <th>Vigencia Inicio</th>
+                                <th>Vigencia Fin</th>
+                                <th>Valor asegurado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="polizasTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- OTROSÍES -->
+        <div id="otrosies" class="tab-content">
+            <div class="section-card">
+                <h3>📑 Otrosíes</h3>
+                <div id="otrosiesTable" class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Tipo</th>
+                                <th>Número</th>
+                                <th>Fecha Inicio</th>
+                                <th>Fecha Fin</th>
+                                <th>Duración</th>
+                                <th>Valor Adición</th>
+                            </tr>
+                        </thead>
+                        <tbody id="otrosiesTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGOS -->
+        <div id="pagos" class="tab-content">
+            <div class="section-card">
+                <h3>💵 Pagos</h3>
+                <div id="resumenPagos" class="resumen-grid"></div>
+                <h4 style="margin-top: 30px; color: #667eea;">Detalle de Pagos</h4>
+                <div id="pagosTable" class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Fecha</th>
+                                <th>No. Factura</th>
+                                <th>Número CRP</th>
+                                <th>Número Pedido</th>
+                                <th>Numero CDP</th>
+                                <th>Numero Solicitud</th>
+                                <th>Concepto</th>
+                                <th>Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pagosTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="../js/detalle.js"></script>
+</body>
+</html>
