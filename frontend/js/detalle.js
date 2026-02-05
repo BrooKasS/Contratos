@@ -17,10 +17,13 @@ const errorMessage    = document.getElementById('errorMessage');
 const contratoContent = document.getElementById('contratoContent');
 
 /**************************************************
- * ID CONTRATO
+ * ID CONTRATO (DESDE HASH)
  **************************************************/
-const contratoId = localStorage.getItem('contratoId');
-console.log('🔐 contratoId:', contratoId);
+const contratoId = location.hash.startsWith('#id=')
+    ? location.hash.replace('#id=', '')
+    : null;
+
+console.log('🔐 contratoId (HASH):', contratoId);
 
 if (!contratoId) {
     mostrarError('No se especificó un ID de contrato');
@@ -35,16 +38,18 @@ async function cargarContrato(id) {
     mostrarLoading();
     try {
         const res = await fetch(`${API_URL}/api/contratos/${id}`);
-        if (!res.ok) throw new Error(`Error ${res.status}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        if (!data.ok || !data.contrato) throw new Error('Contrato inválido');
 
-        console.log('📦 Contrato recibido:', data.contrato);
+        if (!data?.ok || !data.contrato) {
+            throw new Error('Respuesta inválida del backend');
+        }
 
         mostrarContrato(data.contrato);
-        localStorage.removeItem('contratoId');
-    } catch (e) {
-        mostrarError(e.message);
+
+    } catch (err) {
+        console.error(err);
+        mostrarError(err.message || 'Error cargando contrato');
     }
 }
 
@@ -53,7 +58,7 @@ async function cargarContrato(id) {
  **************************************************/
 function mostrarContrato(c) {
     ocultarLoading();
-    if (contratoContent) contratoContent.style.display = 'block';
+    contratoContent.style.display = 'block';
 
     setText('numeroContrato', c.numeroContrato);
     setText('tipoContrato', c.tipoContrato);
@@ -63,9 +68,9 @@ function mostrarContrato(c) {
 
     renderGeneralidades(c.generalidades);
     renderPrincipal(c.principal);
+    renderSeguimiento(c); // 🔥 NUEVO
     renderCRP(c.crp);
     renderPolizas(c.polizas);
-
     renderOtrosies(c.otrosies);
     renderPagos(c.pagos);
 
@@ -82,7 +87,7 @@ function renderGeneralidades(data = {}) {
     const g = data.generalidades || {};
     let html = '';
 
-    for (const [k,v] of Object.entries({
+    for (const [k, v] of Object.entries({
         'NIT': g.nit,
         'Contratista': g.contratista,
         'Dependencia': g.dependencia,
@@ -105,7 +110,7 @@ function renderGeneralidades(data = {}) {
 }
 
 /**************************************************
- * PRINCIPAL
+ * CONTRATO PRINCIPAL
  **************************************************/
 function renderPrincipal(data = {}) {
     const grid = document.getElementById('principalGrid');
@@ -117,9 +122,55 @@ function renderPrincipal(data = {}) {
         ['Duración', c.duracion],
         ['Inicio', formatearFecha(c.fechaInicio)],
         ['Fin', formatearFecha(c.fechaTerminacion)]
-    ].filter(([,v]) => v && v !== 'N/A')
-     .map(([l,v]) => campo(l,v))
-     .join('') || '<p class="muted">Sin datos</p>';
+    ]
+    .filter(([,v]) => v && v !== 'N/A')
+    .map(([l,v]) => campo(l,v))
+    .join('') || '<p class="muted">Sin datos</p>';
+}
+
+/**************************************************
+ * 🔥 SEGUIMIENTO DE CONTRATO (CORE)
+ **************************************************/
+function renderSeguimiento(contrato) {
+    const grid = document.getElementById('seguimientoGrid');
+    if (!grid) return;
+
+    const principal = contrato.principal?.contrato || {};
+    const pagos = contrato.pagos?.pagos || [];
+
+    const hoy = new Date();
+    const inicio = principal.fechaInicio ? new Date(principal.fechaInicio) : null;
+    const fin = principal.fechaTerminacion ? new Date(principal.fechaTerminacion) : null;
+
+    const valorTotal = principal.valor || 0;
+    const valorPagado = pagos.reduce((a,p)=>a+(p.valor||0),0);
+
+    const pctFinanciero = valorTotal
+        ? Math.round((valorPagado / valorTotal) * 100)
+        : 0;
+
+    let pctTiempo = 'N/A';
+    let diasRestantes = 'N/A';
+    let estado = 'N/A';
+
+    if (inicio && fin) {
+        const total = fin - inicio;
+        const transcurrido = hoy - inicio;
+
+        pctTiempo = Math.min(100, Math.max(0, Math.round((transcurrido / total) * 100)));
+        diasRestantes = Math.ceil((fin - hoy) / (1000 * 60 * 60 * 24));
+
+        if (diasRestantes < 0) estado = 'VENCIDO';
+        else if (diasRestantes <= 30) estado = 'PRÓXIMO A VENCER';
+        else estado = 'VIGENTE';
+    }
+
+    grid.innerHTML = [
+        ['Estado del contrato', estado],
+        ['% Ejecución financiera', `${pctFinanciero}%`],
+        ['% Ejecución en tiempo', pctTiempo === 'N/A' ? 'N/A' : `${pctTiempo}%`],
+        ['Días restantes', diasRestantes]
+    ].map(([l,v])=>campo(l,v)).join('');
 }
 
 /**************************************************
@@ -130,8 +181,6 @@ function renderCRP(data = {}) {
     if (!body) return;
 
     const crps = data?.crp || [];
-    console.log('🔹 CRP recibidos:', crps);
-
     if (!crps.length) {
         body.innerHTML = filaVacia(6,'Sin CRP');
         return;
@@ -157,8 +206,6 @@ function renderPolizas(data = {}) {
     if (!body) return;
 
     const polizas = data?.polizas || [];
-    console.log('🔹 Pólizas recibidas:', polizas);
-
     if (!polizas.length) {
         body.innerHTML = filaVacia(7,'Sin pólizas');
         return;
@@ -185,8 +232,6 @@ function renderOtrosies(data = {}) {
     if (!body) return;
 
     const otros = data?.otrosies || [];
-    console.log('🔹 Otrosíes recibidos:', otros);
-
     if (!otros.length) {
         body.innerHTML = filaVacia(7,'Sin otrosíes');
         return;
@@ -206,7 +251,7 @@ function renderOtrosies(data = {}) {
 }
 
 /**************************************************
- * PAGOS (Con RESUMEN)
+ * PAGOS
  **************************************************/
 function renderPagos(data = {}) {
     const resumenDiv = document.getElementById('resumenPagos');
@@ -214,25 +259,17 @@ function renderPagos(data = {}) {
     if (!body || !resumenDiv) return;
 
     const pagos = data?.pagos || [];
-    const r = data?.resumen || null;
+    const r = data?.resumen;
 
-    console.log('🔹 Pagos recibidos:', pagos);
-    console.log('📊 Resumen pagos:', r);
-
-    // RENDER RESUMEN
     if (r) {
         resumenDiv.innerHTML = `
-            <div class="resumen-item"><strong>💰 Valor Total Contrato:</strong> ${formatearMoneda(r.valorTotalContrato)}</div>
-            <div class="resumen-item"><strong>📥 Valor Pagado Antes:</strong> ${formatearMoneda(r.valorPagadoAntes)}</div>
-            <div class="resumen-item"><strong>💵 Valor a Pagar en Este Informe:</strong> ${formatearMoneda(r.valorAPagarEnEsteInforme)}</div>
-            <div class="resumen-item"><strong>📉 Saldo del Contrato:</strong> ${formatearMoneda(r.saldoDelContrato)}</div>
-            <div class="resumen-item"><strong>🔓 Saldo a Liberar:</strong> ${formatearMoneda(r.saldoALiberar)}</div>
+            <div><strong>💰 Total:</strong> ${formatearMoneda(r.valorTotalContrato)}</div>
+            <div><strong>📥 Pagado:</strong> ${formatearMoneda(r.valorPagadoAntes)}</div>
+            <div><strong>💵 Este informe:</strong> ${formatearMoneda(r.valorAPagarEnEsteInforme)}</div>
+            <div><strong>📉 Saldo:</strong> ${formatearMoneda(r.saldoDelContrato)}</div>
         `;
-    } else {
-        resumenDiv.innerHTML = '<p class="muted">No hay resumen de pagos disponible.</p>';
     }
 
-    // RENDER TABLA PAGOS
     if (!pagos.length) {
         body.innerHTML = filaVacia(9,'Sin pagos');
         return;
@@ -273,7 +310,7 @@ function activarTabs(){
     document.querySelectorAll('.tab').forEach(t=>{
         t.onclick=()=>{
             document.querySelectorAll('.tab,.tab-content')
-            .forEach(e=>e.classList.remove('active'));
+                .forEach(e=>e.classList.remove('active'));
             t.classList.add('active');
             document.getElementById(t.dataset.tab)?.classList.add('active');
         };
@@ -295,17 +332,17 @@ function formatearMoneda(v){
 }
 
 function mostrarLoading(){
-    loadingSpinner && (loadingSpinner.style.display='flex');
-    contratoContent && (contratoContent.style.display='none');
-    errorContainer && (errorContainer.style.display='none');
+    loadingSpinner.style.display='flex';
+    contratoContent.style.display='none';
+    errorContainer.style.display='none';
 }
 
 function ocultarLoading(){
-    loadingSpinner && (loadingSpinner.style.display='none');
+    loadingSpinner.style.display='none';
 }
 
 function mostrarError(msg){
     ocultarLoading();
-    if (errorContainer) errorContainer.style.display='block';
-    if (errorMessage) errorMessage.textContent=msg;
+    errorContainer.style.display='block';
+    errorMessage.textContent = msg;
 }

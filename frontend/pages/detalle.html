@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="../styles/detalle.css">
 </head>
 <body>
+
+    <!-- NAV -->
     <nav class="navbar">
         <div class="nav-content">
             <h1>📄 Detalle del Contrato</h1>
@@ -24,16 +26,18 @@
         <p>Cargando contrato...</p>
     </div>
 
+
+
     <!-- ERROR -->
-    <div id="errorContainer" class="error-container" style="display: none;">
+    <div id="errorContainer" class="error-container" style="display:none;">
         <div class="error-icon">⚠️</div>
         <h2>Error</h2>
         <p id="errorMessage"></p>
         <a href="dashboard.html" class="btn-volver">← Volver al Dashboard</a>
     </div>
 
-    <!-- CONTENIDO CONTRATO -->
-    <div id="contratoContent" class="container" style="display: none;">
+    <!-- CONTENIDO -->
+    <div id="contratoContent" class="container" style="display:none;">
 
         <!-- HEADER -->
         <div class="header-card">
@@ -44,11 +48,13 @@
                 </div>
                 <a href="dashboard.html" class="btn-volver-small">← Volver</a>
             </div>
+
             <div class="header-grid">
                 <div class="info-item">
                     <span class="label">🏢 Proveedor</span>
                     <span id="proveedor" class="value"></span>
                 </div>
+        
                 <div class="info-item">
                     <span class="label">📅 Fecha Informe</span>
                     <span id="fechaInforme" class="value"></span>
@@ -68,9 +74,10 @@
             <button class="tab" data-tab="polizas">🛡️ Pólizas</button>
             <button class="tab" data-tab="otrosies">📑 Otrosíes</button>
             <button class="tab" data-tab="pagos">💵 Pagos</button>
+             <button class="tab" data-tab="seguimiento">📊 Seguimiento</button>
         </div>
 
-        <!-- TAB CONTENT -->
+        <!-- ================= TAB CONTENT ================= -->
 
         <!-- GENERALIDADES -->
         <div id="generalidades" class="tab-content active">
@@ -88,12 +95,22 @@
             </div>
         </div>
 
+        <!-- 🔥 SEGUIMIENTO -->
+        <div id="seguimiento" class="tab-content">
+            <div class="section-card">
+                <h3>📊 Seguimiento del Contrato</h3>
+                <p class="muted">
+                    Estado calculado automáticamente según fechas y pagos del contrato.
+                </p>
+                <div id="seguimientoGrid" class="info-grid"></div>
+            </div>
+        </div>
+
         <!-- CRP -->
         <div id="crp" class="tab-content">
             <div class="section-card">
                 <h3>💰 Certificados de Registro Presupuestal</h3>
-                <div id="crpTotal" class="total-badge" style="display: none;"></div>
-                <div id="crpTable" class="table-wrapper">
+                <div class="table-wrapper">
                     <table>
                         <thead>
                             <tr>
@@ -111,22 +128,21 @@
             </div>
         </div>
 
-        <!-- PÓLIZAS -->
+        <!-- POLIZAS -->
         <div id="polizas" class="tab-content">
             <div class="section-card">
                 <h3>🛡️ Pólizas</h3>
-                <div id="polizasTotal" class="total-badge" style="display: none;"></div>
-                <div id="polizasTable" class="table-wrapper">
+                <div class="table-wrapper">
                     <table>
                         <thead>
                             <tr>
                                 <th>No</th>
                                 <th>Aseguradora</th>
                                 <th>No. Póliza</th>
-                                <th>Amparos</th>
+                                <th>Amparo</th>
                                 <th>Vigencia Inicio</th>
                                 <th>Vigencia Fin</th>
-                                <th>Valor asegurado</th>
+                                <th>Valor Asegurado</th>
                             </tr>
                         </thead>
                         <tbody id="polizasTableBody"></tbody>
@@ -135,11 +151,11 @@
             </div>
         </div>
 
-        <!-- OTROSÍES -->
+        <!-- OTROSIES -->
         <div id="otrosies" class="tab-content">
             <div class="section-card">
                 <h3>📑 Otrosíes</h3>
-                <div id="otrosiesTable" class="table-wrapper">
+                <div class="table-wrapper">
                     <table>
                         <thead>
                             <tr>
@@ -162,9 +178,14 @@
         <div id="pagos" class="tab-content">
             <div class="section-card">
                 <h3>💵 Pagos</h3>
+
                 <div id="resumenPagos" class="resumen-grid"></div>
-                <h4 style="margin-top: 30px; color: #667eea;">Detalle de Pagos</h4>
-                <div id="pagosTable" class="table-wrapper">
+
+                <h4 style="margin-top:30px;color:#667eea;">
+                    Detalle de Pagos
+                </h4>
+
+                <div class="table-wrapper">
                     <table>
                         <thead>
                             <tr>
@@ -173,8 +194,8 @@
                                 <th>No. Factura</th>
                                 <th>Número CRP</th>
                                 <th>Número Pedido</th>
-                                <th>Numero CDP</th>
-                                <th>Numero Solicitud</th>
+                                <th>Número CDP</th>
+                                <th>Número Solicitud</th>
                                 <th>Concepto</th>
                                 <th>Valor</th>
                             </tr>
@@ -187,6 +208,7 @@
 
     </div>
 
+    <!-- SCRIPT -->
     <script src="../js/detalle.js"></script>
 </body>
 </html>

@@ -44,7 +44,7 @@ export type CRP = {
 export type CRPExtract = {
   hoja: string;
   seccion: string;                  
-  hastaAntesDe: string;             
+  hastaAntesDe: string;            
   columnas: string[];               
   crp: CRP[];
   totalCRP: number;                 
@@ -72,7 +72,7 @@ export type OtrosiExtract = {
 
 
 export type PagoActual = {
-  numero: number;
+  numero: number,
   fecha: string;
   numeroFactura: string;
   numeroCRP: string;
@@ -96,8 +96,7 @@ export type PagoActualExtract = {
     saldoALiberar: number;
   };
   fuente: { excel: string; hoja: string };
-};
-
+} 
 
 
 export type Generalidades = {
