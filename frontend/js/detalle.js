@@ -66,7 +66,7 @@ function mostrarContrato(c) {
     setText('proveedor', c.proveedor);
     setText('fechaInforme', formatearFecha(c.fechaInforme));
 
-    renderGeneralidades(c.generalidades);
+    renderGeneralidades(c.generalidades);       
     renderPrincipal(c.principal);
     renderSeguimiento(c); // 🔥 NUEVO
     renderCRP(c.crp);
@@ -128,40 +128,45 @@ function renderPrincipal(data = {}) {
     .join('') || '<p class="muted">Sin datos</p>';
 }
 
-/**************************************************
- * 🔥 SEGUIMIENTO DE CONTRATO (CORE)
- **************************************************/
 function renderSeguimiento(contrato) {
     const grid = document.getElementById('seguimientoGrid');
     if (!grid) return;
 
     const principal = contrato.principal?.contrato || {};
-    const pagos = contrato.pagos?.pagos || [];
+    const resumen = contrato.pagos?.resumen || {};
 
     const hoy = new Date();
     const inicio = principal.fechaInicio ? new Date(principal.fechaInicio) : null;
     const fin = principal.fechaTerminacion ? new Date(principal.fechaTerminacion) : null;
 
-    const valorTotal = principal.valor || 0;
-    const valorPagado = pagos.reduce((a,p)=>a+(p.valor||0),0);
+    const valorTotal = Number(resumen.valorTotalContrato) || Number(principal.valor) || 0;
 
-    const pctFinanciero = valorTotal
-        ? Math.round((valorPagado / valorTotal) * 100)
+    const valorEjecutado =
+        (Number(resumen.valorPagadoAntes) || 0) +
+        (Number(resumen.valorAPagarEnEsteInforme) || 0);
+
+    const pctFinanciero = valorTotal > 0
+        ? Math.round((valorEjecutado / valorTotal) * 100)
         : 0;
 
     let pctTiempo = 'N/A';
     let diasRestantes = 'N/A';
     let estado = 'N/A';
+    if (inicio && fin && fin > inicio) {
+        const totalMs = fin - inicio;
+        const transcurridoMs = hoy - inicio;
 
-    if (inicio && fin) {
-        const total = fin - inicio;
-        const transcurrido = hoy - inicio;
+        pctTiempo = Math.min(
+            100,
+            Math.max(0, Math.round((transcurridoMs / totalMs) * 100))
+        );
+    
 
-        pctTiempo = Math.min(100, Math.max(0, Math.round((transcurrido / total) * 100)));
         diasRestantes = Math.ceil((fin - hoy) / (1000 * 60 * 60 * 24));
 
+
         if (diasRestantes < 0) estado = 'VENCIDO';
-        else if (diasRestantes <= 30) estado = 'PRÓXIMO A VENCER';
+        else if (diasRestantes <= 40) estado = 'PRÓXIMO A VENCER';
         else estado = 'VIGENTE';
     }
 
@@ -170,8 +175,10 @@ function renderSeguimiento(contrato) {
         ['% Ejecución financiera', `${pctFinanciero}%`],
         ['% Ejecución en tiempo', pctTiempo === 'N/A' ? 'N/A' : `${pctTiempo}%`],
         ['Días restantes', diasRestantes]
-    ].map(([l,v])=>campo(l,v)).join('');
+    ].map(([l, v]) => campo(l, v)).join('');
 }
+
+
 
 /**************************************************
  * CRP
@@ -179,6 +186,7 @@ function renderSeguimiento(contrato) {
 function renderCRP(data = {}) {
     const body = document.getElementById('crpTableBody');
     if (!body) return;
+    
 
     const crps = data?.crp || [];
     if (!crps.length) {
@@ -186,6 +194,7 @@ function renderCRP(data = {}) {
         return;
     }
 
+   
     body.innerHTML = crps.map((c,i)=>`
         <tr>
             <td>${i+1}</td>

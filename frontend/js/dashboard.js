@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded', cargarContratos);
 
 btnBuscar.addEventListener('click', cargarContratos);
 
+
+
 btnLimpiar.addEventListener('click', () => {
     searchProveedor.value = '';
     searchNumero.value = '';

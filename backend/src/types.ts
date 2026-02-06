@@ -5,7 +5,7 @@ export type ContratoPrincipal = {
   actaInicio: boolean;            
   indeterminado: boolean;
   fechaTerminacion: string;
-  valor: number;
+  valor: number; 
 };
 
 export type ContratoPrincipalExtract = {

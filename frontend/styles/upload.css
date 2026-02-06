@@ -167,10 +167,12 @@ body {
 @media (max-width: 768px) {
     .nav-content {
         flex-direction: column;
-        gap: 15px;
+        gap: 15;
     }
+
     
     .upload-card {
         padding: 30px 20px;
+    
     }
 }
