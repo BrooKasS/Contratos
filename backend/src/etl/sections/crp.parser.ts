@@ -202,30 +202,74 @@ function backfillMissingColumns(rows: any[][], startRow: number, endRow: number,
     if (best) colMap.rubro = Number(best[0]);
   }
 }
+function fillMergedCells(ws: XLSX.WorkSheet) {
+  const merges = (ws["!merges"] ?? []) as XLSX.Range[];
+
+  for (const m of merges) {
+    if (!m?.s || !m?.e) continue;
+
+    const r0 = m.s.r;
+    const r1 = m.e.r;
+    const c0 = m.s.c;
+    const c1 = m.e.c;
+
+    // Buscar el valor base dentro del merge real en el worksheet
+    let base: any = undefined;
+
+    for (let r = r0; r <= r1 && base === undefined; r++) {
+      for (let c = c0; c <= c1 && base === undefined; c++) {
+        const cellAddress = XLSX.utils.encode_cell({ r, c });
+        const cell = ws[cellAddress];
+        if (cell && cell.v !== undefined && cell.v !== null && cell.v !== "") {
+          base = cell.v;
+        }
+      }
+    }
+
+    if (base === undefined) continue;
+
+    // Rellenar todas las celdas del merge en el worksheet
+    for (let r = r0; r <= r1; r++) {
+      for (let c = c0; c <= c1; c++) {
+        const cellAddress = XLSX.utils.encode_cell({ r, c });
+
+        // Si la celda no existe o está vacía, crearla con el valor base
+        if (!ws[cellAddress] || ws[cellAddress].v === undefined || ws[cellAddress].v === "") {
+          ws[cellAddress] = {
+            t: "s",
+            v: base
+          };
+        }
+      }
+    }
+  }
+}
 
 /* ------------------------------ PARSER ------------------------------ */
-
 export function extraerCRP(buffer: Buffer, fileName = "informe.xlsx"): CRPExtract {
   const wb = XLSX.read(buffer, { type: "buffer", raw: true });
   const sheetName = wb.SheetNames[0];
   const ws = wb.Sheets[sheetName];
 
-  // Obtenemos toda la matriz de filas
+  // ✅ Expandir merges directamente en el worksheet (igual que en Polizas)
+  fillMergedCells(ws);
+
+  // Ahora obtener JSON COMPLETO y limpio
   const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, blankrows: false });
 
   const INICIO = "CERTIFICADOS DE REGISTRO PRESUPUESTAL";
   const FIN = "Valor total Certificados de Registro Presupuestal";
 
-  // 1) Encuentra el título de la sección (ancla superior)
+  // 1) Encuentra el título de la sección
   let start = findRowIndexByTextAnyCol(rows, INICIO);
   if (start === -1) start = findRowIndexByContainsAnyCol(rows, "certificados de registro presupuestal");
   if (start === -1) throw new Error(`No se encontró la sección de inicio: "${INICIO}"`);
 
-  // 2) Encuentra el final (ancla inferior)
+  // 2) Encuentra el final
   let end = findRowIndexByContainsAnyCol(rows, normalize(FIN));
   if (end === -1) end = rows.length;
 
-  // 3) Localiza la fila de encabezados (entre start y start+6 típicamente)
+  // 3) Buscar encabezados
   let headerRowIdx = -1;
   for (let r = start + 1; r < Math.min(rows.length, start + 8); r++) {
     const line = normalize((rows[r] ?? []).join(" "));
@@ -234,38 +278,42 @@ export function extraerCRP(buffer: Buffer, fileName = "informe.xlsx"): CRPExtrac
       break;
     }
   }
+
   if (headerRowIdx === -1) {
-    // Fallback: toma la siguiente fila no vacía como "header"
     for (let r = start + 1; r < Math.min(rows.length, start + 8); r++) {
       if (notEmptyRow(rows[r])) { headerRowIdx = r; break; }
     }
   }
+
   if (headerRowIdx === -1) throw new Error("No se encontró la fila de encabezados de CRP.");
 
-  // 4) Mapear columnas a partir del header real
+  // 4) Mapear columnas
   const headerRow = rows[headerRowIdx] ?? [];
   const initialMap = mapHeaderColumns(headerRow);
   backfillMissingColumns(rows, headerRowIdx + 1, end, initialMap);
 
-  const { fecha: colFecha, numero: colNumero, codigo: colCodigo, rubro: colRubro, valor: colValor } = initialMap;
+  const {
+    fecha: colFecha,
+    numero: colNumero,
+    codigo: colCodigo,
+    rubro: colRubro,
+    valor: colValor
+  } = initialMap;
 
-  // Validaciones mínimas (código y valor son críticos)
   if (colCodigo === -1 || colValor === -1) {
     throw new Error(`No fue posible identificar columnas clave de CRP (código=${colCodigo}, valor=${colValor}).`);
   }
 
-  // 5) Recorre filas de datos (MISMAS filas físicas; sin filtrar ni comprimir índices)
+  // 5) Recorre filas
   const crp: CRP[] = [];
   for (let r = headerRowIdx + 1; r < end; r++) {
     const row = rows[r] ?? [];
     if (!notEmptyRow(row)) continue;
 
-    // ¿Fin por “valor total...” en la misma fila?
     const joined = normalize(row.map(x => String(x ?? "")).join(" "));
     if (joined.includes(normalize(FIN))) break;
 
-    // Extractores por columna (exclusivamente la MISMA fila)
-    // Fecha
+    // FECHA
     let fecha = "";
     if (colFecha !== -1) {
       const v = row[colFecha];
@@ -275,20 +323,16 @@ export function extraerCRP(buffer: Buffer, fileName = "informe.xlsx"): CRPExtrac
         "";
     }
 
-    // Número
+    // NUMERO
     let numero = "";
-    if (colNumero !== -1) {
-      numero = extractNumeroFromCell(row[colNumero]);
-    }
+    if (colNumero !== -1) numero = extractNumeroFromCell(row[colNumero]);
 
-    // Código
+    // CODIGO
     let codigo = "";
     if (colCodigo !== -1) {
-      const v = row[colCodigo];
-      const s = String(v ?? "").trim();
+      const s = String(row[colCodigo] ?? "").trim();
       if (looksLikeCodigoCRP(s)) codigo = s;
     }
-    // Fallback: busca en toda la fila si no apareció en su columna
     if (!codigo) {
       for (const v of row) {
         const s = String(v ?? "").trim();
@@ -296,24 +340,19 @@ export function extraerCRP(buffer: Buffer, fileName = "informe.xlsx"): CRPExtrac
       }
     }
 
-    // Rubro (texto)
+    // RUBRO
     let rubro = "";
-    if (colRubro !== -1) {
-      rubro = String(row[colRubro] ?? "").toString().trim();
-    }
+    if (colRubro !== -1) rubro = String(row[colRubro] ?? "").trim();
 
-    // Valor (número grande)
+    // VALOR
     let valor = 0;
-    if (colValor !== -1) {
-      valor = toNumber(row[colValor]);
-    }
-    // Fallback: si no encontró en la columna, toma el mayor de la fila
+    if (colValor !== -1) valor = toNumber(row[colValor]);
+
     if (!valor) {
       const nums = (row ?? []).map(toNumber).filter(n => n >= 100000);
       if (nums.length) valor = Math.max(...nums);
     }
 
-    // Fila válida si hay al menos código o valor o rubro o número o fecha
     if (!(codigo || valor > 0 || rubro || numero || fecha)) continue;
 
     crp.push({ fecha, numero, codigo, rubro, valor });

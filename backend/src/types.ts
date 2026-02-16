@@ -55,7 +55,7 @@ export type CRPExtract = {
 export type Otrosi = {
   numero: number;
   fechaPerfeccionamiento: string;
-  tipo: "ADICION" | "PRORROGA" | "MODIFICACION" | "";
+  tipo: ("ADICION" | "PRORROGA" | "MODIFICACION")[];
   duracionProrroga: string;
   fechaInicio: string;
   fechaFin: string;

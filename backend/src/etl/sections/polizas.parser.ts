@@ -1,4 +1,3 @@
-
 import XLSX from "xlsx";
 import type { Poliza, PolizasExtract } from "../../types";
 import {
@@ -10,11 +9,52 @@ import {
   tryExcelDateToISO
 } from "../utils/excel-utils";
 
-// logica especifica paraextraer la sección de polizas
+// FUNCIÓN PARA SANITIZAR ENCODING PROBLEMÁTICO
+function sanitizeEncoding(text: string): string {
+  if (!text || typeof text !== 'string') return text;
+  return text
+    .replace(/A�O/g, 'AÑO')
+    .replace(/D�A/g, 'DÍA')
+    .replace(/�/g, 'Ñ')
+    .trim();
+}
+
+// Función para extraer texto seguro de celda (maneja objetos de XLSX correctamente)
+function cellText(v: any): string {
+  if (v === null || v === undefined) return "";
+  let result = "";
+  if (typeof v === "object") {
+    result = String((v as any).v ?? (v as any).w ?? (v as any).t ?? "").trim();
+  } else {
+    result = String(v).trim();
+  }
+  // SANITIZAR ENCODING ANTES DE RETORNAR
+  return sanitizeEncoding(result);
+}
+
+// logica especifica para extraer la sección de polizas
 
 
 function parseSpanishDateToISO(s: string): string | null {
-  const txt = normalize(String(s)).replace(/\./g, " ").replace(/\s+/g, " ").trim();
+  //  CRÍTICO: Detectar duraciones ANTES de normalizar
+  // Esto evita que normalize() elimine las Ñ que necesitamos detectar
+  const raw = String(s).trim();
+  
+  // 🔍 AGREGAR ESTAS LÍNEAS DE DEBUG
+
+  
+  // Buscar palabras de duración en el texto SIN normalizar
+  if (/AÑO|AÑOS|ANO|ANOS|MES|MESES|DIA|DIAS|DÍA|DÍAS/i.test(raw)) {
+    
+    return null; // Retornar null para que el caller use el raw
+  }
+  
+  console.log('⚠️ NO ES DURACIÓN - parseando fecha');
+  
+  // Ahora sí podemos normalizar para parsear fechas
+  const txt = normalize(raw).replace(/\./g, " ").replace(/\s+/g, " ").trim();
+  
+  
   const months: Record<string, number> = {
     ene: 1, enero: 1,
     feb: 2, febrero: 2,
@@ -54,7 +94,6 @@ function parseSpanishDateToISO(s: string): string | null {
   return null;
 }
 
-
 function mapHeaderColumnsForPolizas(headerRow: any[]) {
   // normaliza etiquetas
   const labels = headerRow.map(v => normalize(String(v ?? "")));
@@ -85,7 +124,7 @@ function mapHeaderColumnsForPolizas(headerRow: any[]) {
   const colAmparo = findIndex(["amparo","amparos"]);
   const colVigIni = findIndex(["vigencia inicio","inicio vigencia","fecha inicio","inicio"]);
   const colVigFin = findIndex(["vigencia final","fin vigencia","fecha fin","final"]);
-  // “Valor asegurado” puede venir como “valor asegurado” o solo “valor”
+  // "Valor asegurado" puede venir como "valor asegurado" o solo "valor"
   let colValor = findIndex(["valor asegurado"]);
   if (colValor === -1) colValor = findIndex(["valor"]);
 
@@ -138,91 +177,163 @@ function backfillPolizaColumns(rows: any[][], startRow: number, endRow: number,
 }
 
 /* ------------------------------ PARSER ------------------------------ */
+function fillMergedCells(ws: XLSX.WorkSheet) {
+  const merges = (ws["!merges"] ?? []) as XLSX.Range[];
+
+  for (const m of merges) {
+    if (!m?.s || !m?.e) continue;
+
+    const r0 = m.s.r;
+    const r1 = m.e.r;
+    const c0 = m.s.c;
+    const c1 = m.e.c;
+
+    // Buscar el valor base dentro del merge real en el worksheet
+    let base: any = undefined;
+
+    for (let r = r0; r <= r1 && base === undefined; r++) {
+      for (let c = c0; c <= c1 && base === undefined; c++) {
+        const cellAddress = XLSX.utils.encode_cell({ r, c });
+        const cell = ws[cellAddress];
+        if (cell && cell.v !== undefined && cell.v !== null && cell.v !== "") {
+          base = cell.v;
+        }
+      }
+    }
+
+    if (base === undefined) continue;
+
+    // Rellenar todas las celdas del merge en el worksheet
+    for (let r = r0; r <= r1; r++) {
+      for (let c = c0; c <= c1; c++) {
+        const cellAddress = XLSX.utils.encode_cell({ r, c });
+
+        // Si la celda no existe o está vacía, crearla con el valor base
+        if (!ws[cellAddress] || ws[cellAddress].v === undefined || ws[cellAddress].v === "") {
+          ws[cellAddress] = {
+            t: "s",
+            v: base
+          };
+        }
+      }
+    }
+  }
+}
+
+
 
 export function extraerPolizas(buffer: Buffer, fileName = "informe.xlsx"): PolizasExtract {
-  const wb = XLSX.read(buffer, { type: "buffer", raw: true });
+  const wb = XLSX.read(buffer, { type: "buffer", codepage: 1252 });
   const sheetName = wb.SheetNames[0];
   const ws = wb.Sheets[sheetName];
-  const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, blankrows: false });
+
+  //  Expandir merges DIRECTAMENTE en el worksheet
+  fillMergedCells(ws);
+
+  // Ahora sí: obtener JSON completo y limpio
+  const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, blankrows: true });
 
   // 1) Encuentra el bloque de PÓLIZAS
-  // El título aparece como "PÓLIZAS (Diligenciar un registro por cada amparo)"
   let start = findRowIndexByContainsAnyCol(rows, "polizas");
   if (start === -1) start = findRowIndexByContainsAnyCol(rows, "pólizas");
   if (start === -1) start = findRowIndexByContainsAnyCol(rows, "garantias del contrato");
   if (start === -1) throw new Error("No se encontró la sección de PÓLIZAS.");
 
-  // 2) Ancla inferior: siguiente sección (V.- GRADO ...) o fin
+  // 2) Ancla inferior
   let end = -1;
   for (let r = start + 1; r < rows.length; r++) {
     const line = normalize((rows[r] ?? []).join(" "));
-    if (/^v[\.\- ]/.test(line) && line.includes("grado de cumplimiento")) { end = r; break; }
+    if (/^v[\.\- ]/.test(line) && line.includes("grado de cumplimiento")) {
+      end = r;
+      break;
+    }
   }
   if (end === -1) end = rows.length;
 
-  // 3) Ubicar fila de encabezados: buscar palabras clave en las 6 filas siguientes
+  // 3) Encabezados
   let headerRowIdx = -1;
   for (let r = start + 1; r < Math.min(rows.length, start + 8); r++) {
     const line = normalize((rows[r] ?? []).join(" "));
     if (/(aseguradora).*(poliza|póliza).*(amparo).*(vigencia|fecha).*(valor)/.test(line)) {
-      headerRowIdx = r; break;
+      headerRowIdx = r;
+      break;
     }
   }
+
   if (headerRowIdx === -1) {
-    // fallback: la primera fila no vacía luego del título
     for (let r = start + 1; r < Math.min(rows.length, start + 8); r++) {
-      if (notEmptyRow(rows[r])) { headerRowIdx = r; break; }
+      if (notEmptyRow(rows[r])) {
+        headerRowIdx = r;
+        break;
+      }
     }
   }
+
   if (headerRowIdx === -1) throw new Error("No se encontró la fila de encabezados de PÓLIZAS.");
 
-  // 4) Mapear columnas y backfill si faltan
+  // 4) Mapear columnas
   const headerRow = rows[headerRowIdx] ?? [];
   const colMap = mapHeaderColumnsForPolizas(headerRow);
   backfillPolizaColumns(rows, headerRowIdx + 1, end, colMap);
 
   const { aseguradora, numeroPoliza, amparo, vigenciaInicio, vigenciaFin, valorAsegurado } = colMap;
-  if (aseguradora === -1 && numeroPoliza === -1 && amparo === -1) {
-    throw new Error("No fue posible identificar columnas clave de PÓLIZAS (aseguradora/número/amparo).");
-  }
 
-  // 5) Recorrer filas reales de datos (sin compactar índices)
   const polizas: Poliza[] = [];
+
+  // 5) Leer filas
   for (let r = headerRowIdx + 1; r < end; r++) {
     const row = rows[r] ?? [];
     if (!notEmptyRow(row)) continue;
 
-    // ¿Fin por línea de total / cambio de sección en la misma fila?
     const joined = normalize(row.map(x => String(x ?? "")).join(" "));
     if (joined.includes("grado de cumplimiento") || joined.includes("valor total certificados")) break;
 
-    // Extraer valores por columna (MISMA fila)
-    const aseg = (aseguradora !== -1) ? String(row[aseguradora] ?? "").toString().trim() : "";
-    const nPol = (numeroPoliza !== -1) ? String(row[numeroPoliza] ?? "").toString().trim() : "";
-    const amp  = (amparo !== -1) ? String(row[amparo] ?? "").toString().trim() : "";
+    //  cellText ya sanitiza el encoding automáticamente
+    const aseg = aseguradora !== -1 ? cellText(row[aseguradora]) : "";
+    const nPol = numeroPoliza !== -1 ? cellText(row[numeroPoliza]) : "";
+    const amp  = amparo !== -1 ? cellText(row[amparo]) : "";
 
-    // Fechas
-    let vIni = ""; let vFin = "";
+    let vIni = "";
+    let vFin = "";
+
+    //  PROCESAMIENTO MEJORADO DE VIGENCIA INICIO
     if (vigenciaInicio !== -1) {
       const v = row[vigenciaInicio];
-      vIni =
-        (typeof v === "number" && tryExcelDateToISO(v)) ||
-        (typeof v === "string" && parseSpanishDateToISO(v)) || "";
+      const raw = cellText(v); //  Ya viene sanitizado
+      
+      // Si es un número de Excel, intentar convertir a fecha
+      if (typeof v === "number") {
+        const parsed = tryExcelDateToISO(v);
+        vIni = parsed || raw;
+      } 
+      // Si es texto, intentar parsear como fecha española
+      else if (raw) {
+        const parsed = parseSpanishDateToISO(raw);
+        vIni = parsed || raw; //  Si falla el parse, usa el raw (preserva duraciones)
+      }
     }
+
+    
     if (vigenciaFin !== -1) {
       const v = row[vigenciaFin];
-      vFin =
-        (typeof v === "number" && tryExcelDateToISO(v)) ||
-        (typeof v === "string" && parseSpanishDateToISO(v)) || "";
+      const raw = cellText(v); //  Ya viene sanitizado
+      
+      // Si es un número de Excel, intentar convertir a fecha
+      if (typeof v === "number") {
+        const parsed = tryExcelDateToISO(v);
+        vFin = parsed || raw;
+      } 
+      // Si es texto, intentar parsear como fecha española
+      else if (raw) {
+        const parsed = parseSpanishDateToISO(raw);
+        vFin = parsed || raw; // Si falla el parse, usa el raw (preserva duraciones)
+      }
     }
 
-    // Valor asegurado
     let vAseg = 0;
     if (valorAsegurado !== -1) vAseg = toNumber(row[valorAsegurado]);
-    // Limpia ruido flotante (ej. 77225643.799999997)
     if (Number.isFinite(vAseg)) vAseg = Number(vAseg.toFixed(2));
 
-    // Fila válida si aporta algo relevante
     if (!(aseg || nPol || amp || vIni || vFin || vAseg > 0)) continue;
 
     polizas.push({

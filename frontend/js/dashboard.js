@@ -115,8 +115,47 @@ function mostrarContratos(contratos) {
  * HELPERS
  **************************************************/
 function formatearFecha(fecha) {
-    if (!fecha) return 'Sin fecha';
-    return new Date(fecha).toLocaleDateString('es-CO');
+    if (!fecha || fecha === '') return 'Sin fecha';
+    
+    // Sanitiza encoding
+    fecha = String(fecha).replace(/A�O/g, 'AÑO').replace(/D�A/g, 'DÍA').replace(/�/g, 'Ñ');
+    
+    //  Si tiene el símbolo + es una duración
+    if (fecha.includes('+')) {
+        return fecha;
+    }
+    
+    //  Si contiene palabras de duración
+    if (/AÑO|ANO|MES|DIA/i.test(fecha)) {
+        return fecha;
+    }
+    
+    //  Si tiene formato ISO completo con T (ej: 2025-06-27T00:00:00.000Z)
+    // Extraer solo la parte de la fecha YYYY-MM-DD y formatear manualmente
+    if (/^\d{4}-\d{2}-\d{2}T/.test(fecha)) {
+        const fechaSolo = fecha.split('T')[0]; // "2025-06-27"
+        const [year, month, day] = fechaSolo.split('-');
+        return `${parseInt(day)}/${parseInt(month)}/${year}`; // "27/6/2025"
+    }
+    
+    //  Si tiene formato YYYY-MM-DD (sin hora)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+        const [year, month, day] = fecha.split('-');
+        return `${parseInt(day)}/${parseInt(month)}/${year}`; // "27/6/2025"
+    }
+    
+    //  Solo intentar parsear si parece una fecha (tiene números y separadores)
+    const datePattern = /^\d{1,4}[-\/]\d{1,2}[-\/]\d{1,4}$/;
+    if (!datePattern.test(fecha.trim())) {
+        return fecha; // No parece una fecha, retorna raw
+    }
+    
+    const date = new Date(fecha);
+    if (isNaN(date.getTime())) {
+        return fecha; // No es fecha válida
+    }
+    
+    return date.toLocaleDateString('es-CO');
 }
 
 function mostrarLoading() {

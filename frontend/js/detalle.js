@@ -68,7 +68,7 @@ function mostrarContrato(c) {
 
     renderGeneralidades(c.generalidades);       
     renderPrincipal(c.principal);
-    renderSeguimiento(c); // 🔥 NUEVO
+    renderSeguimiento(c); 
     renderCRP(c.crp);
     renderPolizas(c.polizas);
     renderOtrosies(c.otrosies);
@@ -118,6 +118,7 @@ function renderPrincipal(data = {}) {
 
     const c = data.contrato || {};
     grid.innerHTML = [
+        ['fecha Perfeccionamiento', formatearFecha(c.fechaPerfeccionamiento)],
         ['Valor', formatearMoneda(c.valor)],
         ['Duración', c.duracion],
         ['Inicio', formatearFecha(c.fechaInicio)],
@@ -136,8 +137,15 @@ function renderSeguimiento(contrato) {
     const resumen = contrato.pagos?.resumen || {};
 
     const hoy = new Date();
+    // Normalizar a medianoche para comparaciones exactas
+    hoy.setHours(0, 0, 0, 0);
+    
     const inicio = principal.fechaInicio ? new Date(principal.fechaInicio) : null;
     const fin = principal.fechaTerminacion ? new Date(principal.fechaTerminacion) : null;
+    
+    // Normalizar fechas a medianoche
+    if (inicio) inicio.setHours(0, 0, 0, 0);
+    if (fin) fin.setHours(0, 0, 0, 0);
 
     const valorTotal = Number(resumen.valorTotalContrato) || Number(principal.valor) || 0;
 
@@ -152,6 +160,7 @@ function renderSeguimiento(contrato) {
     let pctTiempo = 'N/A';
     let diasRestantes = 'N/A';
     let estado = 'N/A';
+    
     if (inicio && fin && fin > inicio) {
         const totalMs = fin - inicio;
         const transcurridoMs = hoy - inicio;
@@ -161,13 +170,25 @@ function renderSeguimiento(contrato) {
             Math.max(0, Math.round((transcurridoMs / totalMs) * 100))
         );
     
+        const diasDiff = Math.ceil((fin - hoy) / (1000 * 60 * 60 * 24));
 
-        diasRestantes = Math.ceil((fin - hoy) / (1000 * 60 * 60 * 24));
-
-
-        if (diasRestantes < 0) estado = 'VENCIDO';
-        else if (diasRestantes <= 40) estado = 'PRÓXIMO A VENCER';
-        else estado = 'VIGENTE';
+       
+        if (diasDiff < 0) {
+            diasRestantes = '0 (Ya no hay dias restantes)';
+            estado = 'VENCIDO';
+        } else if (diasDiff === 0) {
+            diasRestantes = '¡HOY es el último día!';
+            estado = 'VENCE HOY';
+        } else if (diasDiff === 1) {
+            diasRestantes = '1 día (vence mañana)';
+            estado = 'PRÓXIMO A VENCER';
+        } else if (diasDiff <= 40) {
+            diasRestantes = `${diasDiff} días`;
+            estado = 'PRÓXIMO A VENCER';
+        } else {
+            diasRestantes = `${diasDiff} días`;
+            estado = 'VIGENTE';
+        }
     }
 
     grid.innerHTML = [
@@ -177,8 +198,6 @@ function renderSeguimiento(contrato) {
         ['Días restantes', diasRestantes]
     ].map(([l, v]) => campo(l, v)).join('');
 }
-
-
 
 /**************************************************
  * CRP
@@ -220,14 +239,24 @@ function renderPolizas(data = {}) {
         return;
     }
 
+    // Función para sanitizar strings con encoding común (ej. � → Ñ)
+    function sanitizeText(text) {
+        if (!text || typeof text !== 'string') return text;
+        return text
+            .replace(/A�O/g, 'AÑO')
+            .replace(/D�A/g, 'DÍA')
+            .replace(/MESES/g, 'MESES') // Ajusta si hay más
+            .replace(/�/g, 'Ñ'); // Reemplazo genérico para � suelto
+    }
+
     body.innerHTML = polizas.map((p,i)=>`
         <tr>
             <td>${i+1}</td>
-            <td>${p.aseguradora || '—'}</td>
-            <td>${p.numeroPoliza || '—'}</td>
-            <td>${p.amparo || '—'}</td>
-            <td>${formatearFecha(p.vigenciaInicio)}</td>
-            <td>${formatearFecha(p.vigenciaFin)}</td>
+            <td>${sanitizeText(p.aseguradora) || '—'}</td>
+            <td>${sanitizeText(p.numeroPoliza) || '—'}</td>
+            <td>${sanitizeText(p.amparo) || '—'}</td>
+            <td>${formatearFecha(sanitizeText(p.vigenciaInicio))}</td>
+            <td>${formatearFecha(sanitizeText(p.vigenciaFin))}</td>
             <td>${formatearMoneda(p.valorAsegurado)}</td>
         </tr>
     `).join('');
@@ -251,6 +280,7 @@ function renderOtrosies(data = {}) {
             <td>${i+1}</td>
             <td>${o.tipo || '—'}</td>
             <td>${o.numero || '—'}</td>
+            <td>${formatearFecha(o.fechaPerfeccionamiento)}</td>
             <td>${formatearFecha(o.fechaInicio)}</td>
             <td>${formatearFecha(o.fechaFin)}</td>
             <td>${o.duracionProrroga || '—'}</td>
@@ -326,9 +356,48 @@ function activarTabs(){
     });
 }
 
-function formatearFecha(f){
-    if(!f) return 'N/A';
-    return new Date(f).toLocaleDateString('es-CO');
+function formatearFecha(fecha) {
+    if (!fecha || fecha === '') return 'N/A';
+    
+    // Convertir a string y sanitizar encoding
+    fecha = String(fecha).replace(/A�O/g, 'AÑO').replace(/D�A/g, 'DÍA').replace(/�/g, 'Ñ');
+    
+    //  Si tiene el símbolo + es una duración
+    if (fecha.includes('+')) {
+        return fecha;
+    }
+    
+    //  Si contiene palabras de duración
+    if (/AÑO|ANO|MES|DIA/i.test(fecha)) {
+        return fecha;
+    }
+    
+    //  Si tiene formato ISO completo con T (ej: 2025-06-27T00:00:00.000Z)
+    // Extraer solo la parte de la fecha YYYY-MM-DD y formatear manualmente
+    if (/^\d{4}-\d{2}-\d{2}T/.test(fecha)) {
+        const fechaSolo = fecha.split('T')[0]; // "2025-06-27"
+        const [year, month, day] = fechaSolo.split('-');
+        return `${parseInt(day)}/${parseInt(month)}/${year}`; // "27/6/2025"
+    }
+    
+    //  Si tiene formato YYYY-MM-DD (sin hora)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+        const [year, month, day] = fecha.split('-');
+        return `${parseInt(day)}/${parseInt(month)}/${year}`; // "27/6/2025"
+    }
+    
+    //  Para otros formatos, intentar parsear
+    const datePattern = /^\d{1,4}[-\/]\d{1,2}[-\/]\d{1,4}$/;
+    if (!datePattern.test(fecha.trim())) {
+        return fecha;
+    }
+    
+    const date = new Date(fecha);
+    if (isNaN(date.getTime())) {
+        return fecha;
+    }
+    
+    return date.toLocaleDateString('es-CO');
 }
 
 function formatearMoneda(v){

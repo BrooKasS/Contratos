@@ -74,15 +74,18 @@ function normalizeLoose(v: any): string {
 }
 
 
-function resolveTipoFromDataRow(row: any[]): "ADICION" | "PRORROGA" | "MODIFICACION" | "" {
+function resolveTipoFromDataRow(
+  row: any[]
+): ("ADICION" | "PRORROGA" | "MODIFICACION")[] {
+
   let colAdicion = -1;
   let colProrroga = -1;
   let colModificacion = -1;
 
-  
+  // Buscar columnas donde aparecen los títulos
   for (let c = 0; c < row.length; c++) {
     const label = normalizeLoose(row[c]);
-    
+
     if (label === "adicion" || label === "adición") {
       colAdicion = c;
     }
@@ -94,47 +97,23 @@ function resolveTipoFromDataRow(row: any[]): "ADICION" | "PRORROGA" | "MODIFICAC
     }
   }
 
-  // Ahora buscar marcas "x" en las columnas siguientes (hasta 5 columnas después)
-  let markAdi = false;
-  let markPro = false;
-  let markMod = false;
-
-  // Buscar marca para Adición
-  if (colAdicion !== -1) {
+  function hasMark(startCol: number): boolean {
+    if (startCol === -1) return false;
     for (let offset = 1; offset <= 5; offset++) {
-      if (isMarked(row[colAdicion + offset])) {
-        markAdi = true;
-        break;
-      }
+      if (isMarked(row[startCol + offset])) return true;
     }
+    return false;
   }
 
-  // Buscar marca para Prórroga
-  if (colProrroga !== -1) {
-    for (let offset = 1; offset <= 5; offset++) {
-      if (isMarked(row[colProrroga + offset])) {
-        markPro = true;
-        break;
-      }
-    }
-  }
+  const result: ("ADICION" | "PRORROGA" | "MODIFICACION")[] = [];
 
-  // Buscar marca para Modificación
-  if (colModificacion !== -1) {
-    for (let offset = 1; offset <= 5; offset++) {
-      if (isMarked(row[colModificacion + offset])) {
-        markMod = true;
-        break;
-      }
-    }
-  }
+  if (hasMark(colAdicion)) result.push("ADICION");
+  if (hasMark(colProrroga)) result.push("PRORROGA");
+  if (hasMark(colModificacion)) result.push("MODIFICACION");
 
-  // Prioridad: Modificación > Prórroga > Adición
-  if (markMod) return "MODIFICACION";
-  if (markPro) return "PRORROGA";
-  if (markAdi) return "ADICION";
-  return "";
+  return result;
 }
+
 
 export function extraerOtrosi(
   buffer: Buffer,
@@ -165,7 +144,6 @@ export function extraerOtrosi(
 
   const header = rows[headerRowIdx].map((c) => String(c ?? "").trim());
 
-  
   const labels = header.map((h) => normalize(h));
 
   function findCol(...names: string[]): number {
@@ -182,7 +160,7 @@ export function extraerOtrosi(
     return -1;
   }
 
-  const colNo = findCol("no", "número","numero","No");
+  const colNo = findCol("no", "número", "numero", "No");
   const colFecha = findCol("fecha perfeccion");
   const colDur = findCol("duracion");
   const colIni = findCol("fecha inicio", "inicio");
@@ -190,8 +168,8 @@ export function extraerOtrosi(
   const colVal = findCol("valor");
 
   const otrosies: Otrosi[] = [];
-  
-// detecta headers o encabezados
+
+  // recorrer filas de datos
   for (let r = headerRowIdx + 1; r < rows.length; r++) {
     const row = rows[r];
     if (!notEmptyRow(row)) continue;
@@ -204,16 +182,14 @@ export function extraerOtrosi(
       joined.includes("III") ||
       joined.includes("VALORES") ||
       joined.includes("grado")
-
-    )
-    {
+    ) {
       break;
     }
 
     const numero = colNo !== -1 ? parseInt(row[colNo], 10) || 0 : 0;
     const fechaP = colFecha !== -1 ? parseDate(row[colFecha]) : "";
 
-
+    // ⬇⬇⬇ NUEVO → soporta múltiples tipos
     const tipo = resolveTipoFromDataRow(row);
 
     const dur = colDur !== -1 ? String(row[colDur] ?? "").trim() : "";
@@ -221,13 +197,12 @@ export function extraerOtrosi(
     const fin = colFin !== -1 ? parseDate(row[colFin]) : "";
     const val = colVal !== -1 ? toNumber(row[colVal]) : 0;
 
-    // Solo agregar si hay al menos algún dato
-    if (!(numero || fechaP || tipo || dur || ini || fin || val)) continue;
+    if (!(numero || fechaP || tipo.length || dur || ini || fin || val)) continue;
 
     otrosies.push({
       numero,
       fechaPerfeccionamiento: fechaP,
-      tipo,
+      tipo, // ← ahora es un ARRAY
       duracionProrroga: dur,
       fechaInicio: ini,
       fechaFin: fin,
