@@ -130,7 +130,9 @@ function renderPrincipal(data = {}) {
 
 function renderSeguimiento(contrato) {
     const grid = document.getElementById('seguimientoGrid');
-    if (!grid) return;
+    if (!grid)  return;
+
+
 
     const principal = contrato.principal?.contrato || {};
     const resumen = contrato.pagos?.resumen || {};
@@ -325,12 +327,12 @@ function activarTabs(){
         };
     });
 }
-
-function formatearFecha(f){
-    if(!f) return 'N/A';
-    return new Date(f).toLocaleDateString('es-CO');
+function formatearFecha(f) {
+    if (!f) return 'N/A';
+    
+    const [year, month, day] = f.split('T')[0].split('-');
+    return new Date(year, month - 1, day).toLocaleDateString('es-CO');
 }
-
 function formatearMoneda(v){
     if(v==null) return 'N/A';
     return new Intl.NumberFormat('es-CO',{

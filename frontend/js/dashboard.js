@@ -92,7 +92,7 @@ function mostrarContratos(contratos) {
             <div class="contrato-proveedor">${c.proveedor}</div>
             <div class="contrato-fecha">📅 ${formatearFecha(c.fechaInforme)}</div>
             <div class="contrato-footer">
-                <span class="contrato-id">ID: ${c.id.substring(0, 8)}...</span>
+              
                 <button class="btn-ver" type="button">Ver →</button>
             </div>
         </div>

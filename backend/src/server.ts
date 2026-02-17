@@ -220,7 +220,6 @@ app.post("/api/upload/otrosies", async (req: any, res) => {
     return res.status(500).json({ error: e.message || "Error extrayendo OTROSÍES" });
   }
 });
-
 //   -----------------------RUTA PAGOS -----------------------
 app.post("/api/upload/pagos", async (req: any, res) => {
   try {
@@ -283,6 +282,83 @@ app.get("/api/contratos", async (req, res) => {
     });
   }
 });
+// ---------------------- OBTENER SEGUIMIENTO ----------------------
+app.get("/api/seguimiento", async (req, res) => {
+  try {
+    const contratos = await prisma.contrato.findMany({
+      select: {
+        id: true,
+        numeroContrato: true,
+        proveedor: true,
+        generalidades: true,
+        principal: true,
+        crp: true,
+        abogadoResponsable: true,
+        estadoContrato: true,
+        sistema: true,
+        novedad: true,
+        fechaNovedad: true,
+        createdAt: true,
+        updatedAt: true
+      },
+      orderBy: { createdAt: "desc" }
+    });
+
+    return res.json({
+      ok: true,
+      contratos
+    });
+
+  } catch (e: any) {
+    console.error(e);
+    return res.status(500).json({
+      ok: false,
+      error: "Error obteniendo seguimiento"
+    });
+  }
+});
+ 
+
+
+// ---------------------- ACTUALIZAR SEGUIMIENTO ----------------------
+app.put("/api/seguimiento/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      abogadoResponsable,
+      estadoContrato,
+      sistema,
+      novedad,
+      fechaNovedad
+    } = req.body;
+
+    const contrato = await prisma.contrato.update({
+      where: { id },
+      data: {
+        abogadoResponsable: abogadoResponsable || null,
+        estadoContrato: estadoContrato || null,
+        sistema: sistema || null,
+        novedad: novedad || null,
+        fechaNovedad: fechaNovedad ? new Date(fechaNovedad) : null
+      }
+    });
+
+    return res.json({
+      ok: true,
+      contrato
+    });
+
+  } catch (e: any) {
+    console.error(e);
+    return res.status(500).json({
+      ok: false,
+      error: "Error actualizando seguimiento"
+    });
+  }
+});
+
+
+
 
 // iniciar el servidor
 const PORT = process.env.PORT ?? 3000;
@@ -294,4 +370,8 @@ app.listen(PORT, () => {
   console.log(`OTROSÍES: POST /api/upload/otrosies (campo 'informe')`);
   console.log(`PRINCIPAL: POST /api/upload/principal (campo 'informe')`);
   console.log(`PAGOS ACTUALES: POST /api/upload/pagos (campo 'informe')`);
+  console.log("Servidor listo: http://localhost:3000");
+
+setInterval(() => {}, 1000); // Esto fuerza a Node a mantener el loop de eventos activo
+
 });

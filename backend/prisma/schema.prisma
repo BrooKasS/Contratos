@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -11,8 +8,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-
-  
 }
 
 model Contrato {
@@ -21,12 +16,22 @@ model Contrato {
   proveedor       String
   tipoContrato    String?
   fechaInforme    DateTime?
+  
   generalidades   Json
   principal       Json
-  crp             Json 
+  crp             Json
   polizas         Json
   otrosies        Json
   pagos           Json
-
+   //campos nuevos para sección segui
+  abogadoResponsable  String?
+  estadoContrato      String?  
+  sistema             String?
+  novedad             String?   @db.Text
+  yyy
+ 
+  fechaNovedad        DateTime?
+  
   createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
 }
