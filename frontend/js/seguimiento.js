@@ -6,16 +6,26 @@ const noResults = document.getElementById('noResults');
 const btnRecargar = document.getElementById('btnRecargar');
 const btnExportar = document.getElementById('btnExportar');
 const modalEditar = document.getElementById('modalEditar');
+const searchBar = document.getElementById('searchBar');
 
+let contratosData = [];
 
-let contratosData= [];
+// Función normalize (para normalizar textos: minúsculas, quitar acentos, etc.)
+function normalize(text) {
+    return text
+        .toString()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+}
 
 document.addEventListener('DOMContentLoaded', cargarSeguimiento);
 
 // Eventos
 btnRecargar.addEventListener('click', cargarSeguimiento);
-
 btnExportar.addEventListener('click', exportarExcel);
+searchBar.addEventListener('input', filtrarTabla);
 
 // Cargar seguimiento desde la API
 async function cargarSeguimiento() {
@@ -29,7 +39,7 @@ async function cargarSeguimiento() {
 
         if (data.ok && data.contratos) {
             contratosData = data.contratos;
-            mostrarTabla(data.contratos);
+            mostrarTabla(contratosData);
         } else {
             mostrarError();
         }
@@ -39,7 +49,30 @@ async function cargarSeguimiento() {
     }
 }
 
-// Mostrar tabla con todos los contratos
+// Filtrar tabla por búsqueda
+function filtrarTabla() {
+    const query = normalize(searchBar.value);
+
+    const contratosFiltrados = contratosData.filter(c => {
+        const campos = [
+            c.numeroContrato,
+            c.proveedor,
+            c.abogadoResponsable,
+            c.estadoContrato,
+            c.sistema,
+            c.novedad,
+            formatearFecha(c.fechaNovedad),
+            formatearMoneda(c.crp?.totalCRP),
+            c.generalidades?.generalidades?.objetoContrato
+        ].filter(Boolean).map(normalize).join(" ");
+
+        return campos.includes(query);
+    });
+
+    mostrarTabla(contratosFiltrados);
+}
+
+// Mostrar tabla con contratos (originales o filtrados)
 function mostrarTabla(contratos) {
     ocultarLoading();
 

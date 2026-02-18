@@ -28,6 +28,20 @@
             </div>
         </div>
 
+        <!-- Barra de búsqueda con ARIA para seguimiento -->
+        <div class="search-bar">
+            <input 
+                type="search" 
+                id="searchBar" 
+                placeholder="Buscar por No. Contrato, Proveedor, Estado..." 
+                aria-label="Búsqueda para seguimiento de contratos" 
+                aria-describedby="searchDesc"
+            >
+            <p id="searchDesc" class="sr-only">
+                Barra de búsqueda para seguimiento de contratos. Filtra por número de contrato, proveedor, estado, novedad o cualquier campo visible en la tabla.
+            </p>
+        </div>
+
         <div id="loadingSpinner" class="loading">
             <div class="spinner"></div>
             <p>Cargando contratos...</p>
