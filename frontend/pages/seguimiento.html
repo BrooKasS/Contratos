@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seguimiento de Contratos</title>
+    <link rel="stylesheet" href="../styles/seguimiento.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <h1>📊 Seguimiento de Contratos</h1>
+            <div class="nav-links">
+                <a href="../index.html">Inicio</a>
+                <a href="upload.html">Subir</a>
+                <a href="dashboard.html">Contratos</a>
+                <a href="seguimiento.html">Seguimiento</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header-section">
+            <h2>Tabla de Seguimiento</h2>
+            <div class="header-actions">
+                <button id="btnRecargar" class="btn-reload">🔄 Recargar</button>
+                <button id="btnExportar" class="btn-export">📥 Exportar Excel</button>
+            </div>
+        </div>
+
+        <div id="loadingSpinner" class="loading">
+            <div class="spinner"></div>
+            <p>Cargando contratos...</p>
+        </div>
+
+        <div id="tableContainer" class="table-container" style="display: none;">
+            <div class="table-scroll">
+                <table id="seguimientoTable">
+                    <thead>
+                        <tr>
+                            <th>No Contrato</th>
+                            <th>Proveedor</th>
+                            <th>Vinculados</th>
+                            <th>Vigencia</th>
+                            <th>Abogado Responsable</th>
+                            <th>Contacto Proveedor</th>
+                            <th>Estado</th>
+                            <th>Sistema</th>
+                            <th>Novedad</th>
+                            <th>Fecha</th>
+                            <th>CRP Total</th>
+                            <th>Objeto</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="noResults" class="no-results" style="display: none;">
+            <div class="no-results-icon">📭</div>
+            <p>No hay contratos registrados</p>
+            <a href="upload.html" class="btn-upload-link">Subir primer contrato</a>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDICIÓN -->
+    <div id="modalEditar" class="modal" style="display: none;">
+        <div class="modal-overlay" onclick="cerrarModal()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>✏️ Editar Seguimiento</h3>
+                <button class="modal-close" onclick="cerrarModal()">×</button>
+            </div>
+            <form id="formSeguimiento" onsubmit="guardarSeguimiento(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="editContratoId">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Número de Contrato</label>
+                            <input type="text" id="editNumeroContrato" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label>Proveedor</label>
+                            <input type="text" id="editProveedor" disabled>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Abogado Responsable</label>
+                        <input type="text" id="editAbogado" placeholder="Nombre del abogado responsable">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Estado del Contrato</label>
+                            <select id="editEstado">
+                                <option value="">Sin especificar</option>
+                                <option value="Ejecución">Ejecución</option>
+                                <option value="Terminado">Terminado</option>
+                                <option value="Suspendido">Suspendido</option>
+                                <option value="En revisión">En revisión</option>
+                                <option value="Pendiente">Pendiente</option>
+                                <option value="Liquidado">Liquidado</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Sistema</label>
+                            <input type="text" id="editSistema" placeholder="Ej: MITRA Y JAC">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Novedad</label>
+                        <textarea id="editNovedad" rows="4" placeholder="Descripción de la novedad o actualización del contrato..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Fecha de Novedad</label>
+                        <input type="date" id="editFecha">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+                    <button type="submit" class="btn-save">💾 Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/seguimiento.js"></script>
+</body>
+</html>
