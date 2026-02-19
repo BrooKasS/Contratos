@@ -9,7 +9,8 @@
 <body>
     <nav class="navbar">
         <div class="nav-content">
-            <h1>📊 Seguimiento de Contratos</h1>
+            <img src="../styles/imagenes/ChatGPT Image 18 feb 2026, 19_59_56.png" alt="">
+            <h1>Dashboard de Contratos</h1>
             <div class="nav-links">
                 <a href="../index.html">Inicio</a>
                 <a href="upload.html">Subir</a>
@@ -23,24 +24,23 @@
         <div class="header-section">
             <h2>Tabla de Seguimiento</h2>
             <div class="header-actions">
-                <button id="btnRecargar" class="btn-reload">🔄 Recargar</button>
-                <button id="btnExportar" class="btn-export">📥 Exportar Excel</button>
-            </div>
-        </div>
-
-        <!-- Barra de búsqueda con ARIA para seguimiento -->
-        <div class="search-bar">
+                    <!-- Barra de búsqueda con ARIA para seguimiento -->
             <input 
                 type="search" 
                 id="searchBar" 
-                placeholder="Buscar por No. Contrato, Proveedor, Estado..." 
+                 placeholder="Buscar por No. Contrato, Proveedor, Estado..." 
                 aria-label="Búsqueda para seguimiento de contratos" 
                 aria-describedby="searchDesc"
             >
             <p id="searchDesc" class="sr-only">
                 Barra de búsqueda para seguimiento de contratos. Filtra por número de contrato, proveedor, estado, novedad o cualquier campo visible en la tabla.
             </p>
+                <button id="btnRecargar" class="btn-reload">🔄 Recargar</button>
+                <button id="btnExportar" class="btn-export">📥 Exportar Excel</button>
+            </div>
         </div>
+
+
 
         <div id="loadingSpinner" class="loading">
             <div class="spinner"></div>

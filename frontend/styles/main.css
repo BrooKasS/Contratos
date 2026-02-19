@@ -5,9 +5,23 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-family: Calibri, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, 
+    #FA8200 0%, 
+    #861F41 35%, 
+    #B7312C 70%, 
+    #D86018 100%
+);
     min-height: 100vh;
+}
+
+img {
+    position: absolute;
+    left: 25%;
+    top: 12%;
+    transform: translateY(-50%);
+    height: 500px; /* ajustable */
+    width: auto;
 }
 
 .hero-container {
@@ -53,7 +67,7 @@ body {
 
 .card:hover {
     transform: translateY(-10px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    box-shadow: 0 20px 40px rgba(183,49,44,0.3); /* Rojo con transparencia */
 }
 
 .card-icon {
@@ -74,11 +88,11 @@ body {
 }
 
 .card-upload:hover {
-    border-top: 5px solid #667eea;
+    border-top: 5px solid #B7312C;
 }
 
 .card-dashboard:hover {
-    border-top: 5px solid #764ba2;
+    border-top: 5px solid #861F41;
 }
 
 @media (max-width: 768px) {

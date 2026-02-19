@@ -5,8 +5,13 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-family: Calibri, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, 
+    #FA8200 0%, 
+    #861F41 35%, 
+    #B7312C 70%, 
+    #D86018 100%
+);
     min-height: 100vh;
 }
 
@@ -27,9 +32,20 @@ body {
     align-items: center;
 }
 
+.nav-content img {
+    position: absolute;
+    left: 0;
+    top: 54%;
+    transform: translateY(-50%);
+    height: 169px; /* ajustable */
+    width: auto;
+}
+
 .nav-content h1 {
-    color: #667eea;
-    font-size: 24px;
+    color: #861F41;
+    font-size: 23px;
+    margin-left: 165px;
+    margin-top: -10px;
 }
 
 .nav-links {
@@ -48,11 +64,11 @@ body {
 
 .nav-links a:hover {
     background: #f0f0f0;
-    color: #667eea;
+    color: #B7312C;
 }
 
 .nav-links a.active {
-    background: #667eea;
+    background: #B7312C;
     color: white;
 }
 
@@ -100,7 +116,7 @@ body {
     justify-content: center;
     gap: 10px;
     padding: 20px;
-    border: 3px dashed #667eea;
+    border: 3px dashed #B7312C;
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -108,8 +124,8 @@ body {
 }
 
 #fileLabel:hover {
-    background: #eef1ff;
-    border-color: #5568d3;
+    background: #f0f4ff;
+    border-color: #861F41;
 }
 
 .file-icon {
@@ -117,7 +133,7 @@ body {
 }
 
 .file-text {
-    color: #667eea;
+    color: #B7312C;
     font-weight: 600;
     font-size: 16px;
 }
@@ -125,7 +141,7 @@ body {
 #uploadBtn {
     width: 100%;
     padding: 16px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #FA8200 0%, #861F41 35%, #B7312C 70%, #D86018 100%);
     color: white;
     border: none;
     border-radius: 10px;
@@ -137,7 +153,7 @@ body {
 
 #uploadBtn:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 6px 20px rgba(183,49,44,0.4);
 }
 
 #uploadBtn:disabled {
