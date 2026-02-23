@@ -5,8 +5,13 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-family: Calibri, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, 
+    #FA8200 0%, 
+    #861F41 35%, 
+    #B7312C 70%, 
+    #D86018 100%
+);
     min-height: 100vh;
     padding-bottom: 40px;
 }
@@ -20,17 +25,29 @@ body {
 }
 
 .nav-content {
-    max-width: 1400px;
+    max-width: 1600px;
     margin: 0 auto;
     padding: 20px 30px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: relative;
+}
+
+.nav-content img {
+    position: absolute;
+    left: 0;
+    top: 55%;
+    transform: translateY(-50%);
+    height: 170px; /* ajustable */
+    width: auto;
 }
 
 .nav-content h1 {
-    color: #667eea;
-    font-size: 24px;
+    color: #861F41;
+    font-size: 23px;
+    margin-left: 190px;
+    margin-top: -10px;
 }
 
 .nav-links {
@@ -49,7 +66,18 @@ body {
 
 .nav-links a:hover {
     background: #f0f0f0;
-    color: #667eea;
+    color: #B7312C;
+}
+
+.nav-links a.active {
+    background: #B7312C;
+    color: white;
+}
+
+.container {
+    max-width: 1600px;
+    margin: 30px auto;
+    padding: 0 20px;
 }
 
 .loading {
@@ -69,7 +97,7 @@ body {
     width: 50px;
     height: 50px;
     border: 4px solid #f0f0f0;
-    border-top: 4px solid #667eea;
+    border-top: 4px solid #B7312C;
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 20px;
@@ -107,7 +135,7 @@ body {
 .btn-volver, .btn-volver-small {
     display: inline-block;
     padding: 12px 24px;
-    background: #667eea;
+    background: #B7312C;
     color: white;
     text-decoration: none;
     border-radius: 8px;
@@ -116,7 +144,7 @@ body {
 }
 
 .btn-volver:hover, .btn-volver-small:hover {
-    background: #5568d3;
+    background: #861F41;
     transform: translateY(-2px);
 }
 
@@ -149,14 +177,14 @@ body {
 }
 
 .header-top h2 {
-    color: #667eea;
+    color: #B7312C;
     font-size: 28px;
     margin-bottom: 10px;
 }
 
 .badge {
     display: inline-block;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #FA8200 0%, #861F41 35%, #B7312C 70%, #D86018 100%);
     color: white;
     padding: 6px 16px;
     border-radius: 20px;
@@ -215,11 +243,11 @@ body {
 
 .tab:hover {
     background: #f0f0f0;
-    color: #667eea;
+    color: #B7312C;
 }
 
 .tab.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #FA8200 0%, #861F41 35%, #B7312C 70%, #D86018 100%);
     color: white;
 }
 
@@ -239,7 +267,7 @@ body {
 }
 
 .section-card h3 {
-    color: #667eea;
+    color: #B7312C;
     font-size: 22px;
     margin-bottom: 25px;
     padding-bottom: 15px;
@@ -256,7 +284,7 @@ body {
     background: #f8f9ff;
     padding: 15px;
     border-radius: 8px;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #B7312C;
 }
 
 .info-field .field-label {
@@ -275,7 +303,7 @@ body {
 }
 
 .total-badge {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #FA8200 0%, #861F41 35%, #B7312C 70%, #D86018 100%);
     color: white;
     padding: 15px 20px;
     border-radius: 10px;
@@ -298,7 +326,7 @@ table {
 }
 
 thead {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #FA8200 0%, #861F41 35%, #B7312C 70%, #D86018 100%);
     color: white;
 }
 
@@ -336,7 +364,7 @@ tbody tr:last-child td {
     background: #f8f9ff;
     padding: 20px;
     border-radius: 10px;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #B7312C;
 }
 
 .resumen-label {

@@ -6,7 +6,8 @@ const noResults = document.getElementById('noResults');
 const btnRecargar = document.getElementById('btnRecargar');
 const btnExportar = document.getElementById('btnExportar');
 const modalEditar = document.getElementById('modalEditar');
-const searchBar = document.getElementById('searchBar');
+const btnFiltros = document.getElementById('btnFiltros');
+const modalFiltros = document.getElementById('modalFiltros');
 
 let contratosData = [];
 
@@ -25,7 +26,7 @@ document.addEventListener('DOMContentLoaded', cargarSeguimiento);
 // Eventos
 btnRecargar.addEventListener('click', cargarSeguimiento);
 btnExportar.addEventListener('click', exportarExcel);
-searchBar.addEventListener('input', filtrarTabla);
+btnFiltros.addEventListener('click', abrirModalFiltros);
 
 // Cargar seguimiento desde la API
 async function cargarSeguimiento() {
@@ -39,6 +40,7 @@ async function cargarSeguimiento() {
 
         if (data.ok && data.contratos) {
             contratosData = data.contratos;
+            popularListasSugerencias(); // Popular datalists con sugerencias
             mostrarTabla(contratosData);
         } else {
             mostrarError();
@@ -49,27 +51,114 @@ async function cargarSeguimiento() {
     }
 }
 
-// Filtrar tabla por búsqueda
-function filtrarTabla() {
-    const query = normalize(searchBar.value);
+// Popular datalists con valores únicos para autocompletado
+function popularListasSugerencias() {
+    // Números de contrato únicos
+    const numerosUnicos = [...new Set(contratosData.map(c => c.numeroContrato).filter(Boolean))];
+
+    // Proveedores únicos
+    const proveedoresUnicos = [...new Set(contratosData.map(c => c.proveedor).filter(Boolean))];
+
+    // Abogados únicos
+    const abogadosUnicos = [...new Set(contratosData.map(c => c.abogadoResponsable).filter(Boolean))];
+
+    // Novedades únicas (tomamos palabras clave únicas, pero para simplicidad, tomamos novedades completas si no son muy largas)
+    const novedadesUnicas = [...new Set(contratosData.map(c => c.novedad).filter(Boolean))];
+
+    // Setup custom autocomplete
+    setupAutocomplete('filtroNumeroContrato', 'autoCompleteNumero', numerosUnicos);
+    setupAutocomplete('filtroProveedor', 'autoCompleteProveedor', proveedoresUnicos);
+    setupAutocomplete('filtroAbogado', 'autoCompleteAbogado', abogadosUnicos);
+    setupAutocomplete('filtroNovedad', 'autoCompleteNovedad', novedadesUnicas);
+}
+
+// Función para crear autocomplete custom
+function setupAutocomplete(inputId, listId, dataList) {
+    const input = document.getElementById(inputId);
+    const list = document.getElementById(listId);
+
+    function showSuggestions(suggestions) {
+        list.innerHTML = '';
+        suggestions.forEach(sug => {
+            const div = document.createElement('div');
+            div.textContent = sug;
+            div.addEventListener('click', () => {
+                input.value = sug;
+                list.style.display = 'none';
+            });
+            list.appendChild(div);
+        });
+        list.style.display = suggestions.length ? 'block' : 'none';
+    }
+
+    input.addEventListener('focus', () => showSuggestions(dataList));
+
+    input.addEventListener('input', () => {
+        const val = normalize(input.value);
+        const filtered = dataList.filter(item => normalize(item).includes(val));
+        showSuggestions(filtered);
+    });
+
+    document.addEventListener('click', e => {
+        if (e.target !== input) list.style.display = 'none';
+    });
+}
+
+// Abrir modal de filtros
+function abrirModalFiltros() {
+    modalFiltros.style.display = 'flex';
+}
+
+// Cerrar modal de filtros
+function cerrarModalFiltros() {
+    modalFiltros.style.display = 'none';
+}
+
+// Limpiar filtros
+function limpiarFiltros() {
+    document.getElementById('filtroNumeroContrato').value = '';
+    document.getElementById('filtroProveedor').value = '';
+    document.getElementById('filtroAbogado').value = '';
+    document.getElementById('filtroEstado').value = '';
+    document.getElementById('filtroNovedad').value = '';
+    document.getElementById('filtroFechaDesde').value = '';
+    document.getElementById('filtroFechaHasta').value = '';
+    aplicarFiltros(); // Aplicar para mostrar todo
+}
+
+// Aplicar filtros y filtrar la tabla
+function aplicarFiltros() {
+    const numContrato = normalize(document.getElementById('filtroNumeroContrato').value);
+    const proveedor = normalize(document.getElementById('filtroProveedor').value);
+    const abogado = normalize(document.getElementById('filtroAbogado').value);
+    const estado = document.getElementById('filtroEstado').value;
+    const novedad = normalize(document.getElementById('filtroNovedad').value);
+    const fechaDesde = document.getElementById('filtroFechaDesde').value ? new Date(document.getElementById('filtroFechaDesde').value) : null;
+    const fechaHasta = document.getElementById('filtroFechaHasta').value ? new Date(document.getElementById('filtroFechaHasta').value) : null;
 
     const contratosFiltrados = contratosData.filter(c => {
-        const campos = [
-            c.numeroContrato,
-            c.proveedor,
-            c.abogadoResponsable,
-            c.estadoContrato,
-            c.sistema,
-            c.novedad,
-            formatearFecha(c.fechaNovedad),
-            formatearMoneda(c.crp?.totalCRP),
-            c.generalidades?.generalidades?.objetoContrato
-        ].filter(Boolean).map(normalize).join(" ");
+        const matchNum = !numContrato || normalize(c.numeroContrato).includes(numContrato);
+        const matchAbogado = !abogado || normalize(c.abogadoResponsable || '').includes(abogado);
+        const matchProv = !proveedor || normalize(c.proveedor).includes(proveedor);
+        const matchEstado = !estado || c.estadoContrato === estado;
+        const matchNov = !novedad || normalize(c.novedad || '').includes(novedad);
+        
+        let matchFecha = true;
+        if (fechaDesde || fechaHasta) {
+            const fechaNov = c.fechaNovedad ? new Date(c.fechaNovedad) : null;
+            if (fechaNov) {
+                if (fechaDesde && fechaNov < fechaDesde) matchFecha = false;
+                if (fechaHasta && fechaNov > fechaHasta) matchFecha = false;
+            } else {
+                matchFecha = false;
+            }
+        }
 
-        return campos.includes(query);
+        return matchNum && matchProv && matchAbogado && matchEstado && matchNov && matchFecha;
     });
 
     mostrarTabla(contratosFiltrados);
+    cerrarModalFiltros();
 }
 
 // Mostrar tabla con contratos (originales o filtrados)

@@ -5,6 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Contratos</title>
     <link rel="stylesheet" href="../styles/dashboard.css">
+    <style>
+        .autocomplete-list {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 1000;
+            width: 100%; /* Igual ancho que input */
+        }
+        .autocomplete-list div {
+            padding: 8px;
+            cursor: pointer;
+        }
+        .autocomplete-list div:hover {
+            background: #f0f0f0;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -22,13 +40,13 @@
     </nav>
 
     <div class="container">
-        <div class="filters-card">
-            <h3>🔍 Filtros</h3>
-            <div class="filters-grid">
-                <input type="text" id="searchProveedor" placeholder="Buscar por proveedor...">
-                <input type="text" id="searchNumero" placeholder="Buscar por número...">
-                <button id="btnBuscar">Buscar</button>
-                <button id="btnLimpiar" class="btn-secondary">Limpiar</button>
+        <div class="header-section">
+            <h2>Contratos</h2>
+            <div class="header-actions">
+                <!-- Botón de filtros en lugar de la barra de búsqueda -->
+                <button id="btnFiltros" class="btn-filtros">🔍 Filtros</button>
+                <button id="btnRecargar" class="btn-reload">🔄 Recargar</button>
+                <button id="btnExportar" class="btn-export">📥 Exportar Excel</button>
             </div>
         </div>
 
@@ -56,6 +74,36 @@
             <div id="noResults" class="no-results" style="display: none;">
                 <p>🔍 No se encontraron contratos</p>
             </div>
+        </div>
+    </div>
+
+    <!-- NUEVO MODAL DE FILTROS -->
+    <div id="modalFiltros" class="modal" style="display: none;">
+        <div class="modal-overlay" onclick="cerrarModalFiltros()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔍 Filtros de Búsqueda</h3>
+                <button class="modal-close" onclick="cerrarModalFiltros()">×</button>
+            </div>
+            <form id="formFiltros">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>No. Contrato</label>
+                        <input type="text" id="filtroNumeroContrato" placeholder="Número de contrato">
+                        <div id="autoCompleteNumero" class="autocomplete-list"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Proveedor</label>
+                        <input type="text" id="filtroProveedor" placeholder="Proveedor">
+                        <div id="autoCompleteProveedor" class="autocomplete-list"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="limpiarFiltros()">Limpiar</button>
+                    <button type="button" class="btn-save" onclick="aplicarFiltros()">Aplicar Filtros</button>
+                </div>
+            </form>
         </div>
     </div>
 

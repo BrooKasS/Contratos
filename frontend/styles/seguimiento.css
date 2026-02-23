@@ -101,6 +101,7 @@ body {
     gap: 10px;
 }
 
+.btn-filtros,
 .btn-reload,
 .btn-export {
     border: none;
@@ -110,6 +111,16 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     font-size: 14px;
+}
+
+.btn-filtros {
+    background: #B7312C;
+    color: white;
+}
+
+.btn-filtros:hover {
+    background: #861F41;
+    transform: translateY(-2px);
 }
 
 .btn-reload {
@@ -489,6 +500,7 @@ tbody tr:last-child td {
         flex-direction: column;
     }
 
+    .btn-filtros,
     .btn-reload,
     .btn-export {
         width: 100%;
@@ -499,29 +511,6 @@ tbody tr:last-child td {
     }
 }
 
-
-#searchBar {
-    width: 400px; /* Tamaño más pequeño (ajusta si necesitas) */
-    padding: 8px 30px 8px 12px; /* Padding reducido para hacerlo más compacto */
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    font-size: 14px;
-    transition: border-color 0.3s ease;
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill="%23666" d="M15.7 14.3l-4.2-4.2c.8-1.1 1.3-2.5 1.3-4 0-3.6-2.9-6.5-6.5-6.5S0 2.5 0 6.1s2.9 6.5 6.5 6.5c1.5 0 2.9-.5 4-1.3l4.2 4.2c.2.2.5.3.8.3s.6-.1.8-.3c.4-.4.4-1 0-1.4zM6.5 11.6c-3 0-5.5-2.5-5.5-5.5S3.5 0.6 6.5 0.6 12 3.1 12 6.1s-2.5 5.5-5.5 5.5z"/></svg>');
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-    background-size: 14px; /* Icono más pequeño */
-}
-
-#searchBar:focus {
-    border-color: #B7312C;
-    outline: none;
-}
-
-#searchBar::placeholder {
-    color: #999;
-    font-size: 15px; /* Placeholder más pequeño */
-}
 .sr-only {
     position: absolute;
     width: 1px;
@@ -533,3 +522,4 @@ tbody tr:last-child td {
     white-space: nowrap;
     border: 0;
 }
+

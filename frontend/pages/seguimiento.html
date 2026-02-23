@@ -5,6 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seguimiento de Contratos</title>
     <link rel="stylesheet" href="../styles/seguimiento.css">
+    <style>
+        .autocomplete-list {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 1000;
+            width: 100%; /* Igual ancho que input */
+        }
+        .autocomplete-list div {
+            padding: 8px;
+            cursor: pointer;
+        }
+        .autocomplete-list div:hover {
+            background: #f0f0f0;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -24,23 +42,12 @@
         <div class="header-section">
             <h2>Tabla de Seguimiento</h2>
             <div class="header-actions">
-                    <!-- Barra de búsqueda con ARIA para seguimiento -->
-            <input 
-                type="search" 
-                id="searchBar" 
-                 placeholder="Buscar por No. Contrato, Proveedor, Estado..." 
-                aria-label="Búsqueda para seguimiento de contratos" 
-                aria-describedby="searchDesc"
-            >
-            <p id="searchDesc" class="sr-only">
-                Barra de búsqueda para seguimiento de contratos. Filtra por número de contrato, proveedor, estado, novedad o cualquier campo visible en la tabla.
-            </p>
+                <!-- Botón de filtros en lugar de la barra de búsqueda -->
+                <button id="btnFiltros" class="btn-filtros">🔍 Filtros</button>
                 <button id="btnRecargar" class="btn-reload">🔄 Recargar</button>
                 <button id="btnExportar" class="btn-export">📥 Exportar Excel</button>
             </div>
         </div>
-
-
 
         <div id="loadingSpinner" class="loading">
             <div class="spinner"></div>
@@ -140,6 +147,71 @@
                 <div class="modal-footer">
                     <button type="button" class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
                     <button type="submit" class="btn-save">💾 Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- NUEVO MODAL DE FILTROS -->
+    <div id="modalFiltros" class="modal" style="display: none;">
+        <div class="modal-overlay" onclick="cerrarModalFiltros()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔍 Filtros de Búsqueda</h3>
+                <button class="modal-close" onclick="cerrarModalFiltros()">×</button>
+            </div>
+            <form id="formFiltros">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>No. Contrato</label>
+                        <input type="text" id="filtroNumeroContrato" placeholder="Número de contrato">
+                        <div id="autoCompleteNumero" class="autocomplete-list"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Proveedor</label>
+                        <input type="text" id="filtroProveedor" placeholder="Proveedor">
+                        <div id="autoCompleteProveedor" class="autocomplete-list"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Abogado Responsable</label>
+                        <input type="text" id="filtroAbogado" placeholder="Abogado responsable">
+                        <div id="autoCompleteAbogado" class="autocomplete-list"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Estado</label>
+                        <select id="filtroEstado">
+                            <option value="">Todos</option>
+                            <option value="Ejecución">Ejecución</option>
+                            <option value="Terminado">Terminado</option>
+                            <option value="Suspendido">Suspendido</option>
+                            <option value="En revisión">En revisión</option>
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Liquidado">Liquidado</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Novedad</label>
+                        <input type="text" id="filtroNovedad" placeholder="Palabra clave en novedad">
+                        <div id="autoCompleteNovedad" class="autocomplete-list"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Fecha de Novedad (desde)</label>
+                        <input type="date" id="filtroFechaDesde">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Fecha de Novedad (hasta)</label>
+                        <input type="date" id="filtroFechaHasta">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="limpiarFiltros()">Limpiar</button>
+                    <button type="button" class="btn-save" onclick="aplicarFiltros()">Aplicar Filtros</button>
                 </div>
             </form>
         </div>

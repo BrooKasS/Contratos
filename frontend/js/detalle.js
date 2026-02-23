@@ -279,7 +279,6 @@ function renderOtrosies(data = {}) {
         <tr>
             <td>${i+1}</td>
             <td>${o.tipo || '—'}</td>
-            <td>${o.numero || '—'}</td>
             <td>${formatearFecha(o.fechaPerfeccionamiento)}</td>
             <td>${formatearFecha(o.fechaInicio)}</td>
             <td>${formatearFecha(o.fechaFin)}</td>

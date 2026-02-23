@@ -5,33 +5,33 @@ const contratosGrid = document.getElementById('contratosGrid');
 const noResults = document.getElementById('noResults');
 const totalContratos = document.getElementById('totalContratos');
 const resultadosCount = document.getElementById('resultadosCount');
-const searchProveedor = document.getElementById('searchProveedor');
-const searchNumero = document.getElementById('searchNumero');
-const btnBuscar = document.getElementById('btnBuscar');
-const btnLimpiar = document.getElementById('btnLimpiar');
+const btnRecargar = document.getElementById('btnRecargar');
+const btnExportar = document.getElementById('btnExportar');
+const btnFiltros = document.getElementById('btnFiltros');
+const modalFiltros = document.getElementById('modalFiltros');
+const filtroProveedor = document.getElementById('filtroProveedor');
+const filtroNumero = document.getElementById('filtroNumeroContrato');
+
+let contratosData = [];
+
+// Función normalize (para normalizar textos: minúsculas, quitar acentos, etc.)
+function normalize(text) {
+    return text
+        .toString()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+}
 
 /**************************************************
  * EVENTOS
  **************************************************/
 document.addEventListener('DOMContentLoaded', cargarContratos);
 
-btnBuscar.addEventListener('click', cargarContratos);
-
-
-
-btnLimpiar.addEventListener('click', () => {
-    searchProveedor.value = '';
-    searchNumero.value = '';
-    cargarContratos();
-});
-
-searchProveedor.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') cargarContratos();
-});
-
-searchNumero.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') cargarContratos();
-});
+btnFiltros.addEventListener('click', abrirModalFiltros);
+btnRecargar.addEventListener('click', cargarContratos);
+btnExportar.addEventListener('click', exportarExcel); // Placeholder, implementa si es necesario
 
 /**************************************************
  * FETCH CONTRATOS
@@ -39,12 +39,15 @@ searchNumero.addEventListener('keypress', (e) => {
 async function cargarContratos() {
     mostrarLoading();
 
+    const proveedor = filtroProveedor.value.trim();
+    const numero = filtroNumero.value.trim();
+
     const params = new URLSearchParams();
-    if (searchProveedor.value.trim()) {
-        params.append('proveedor', searchProveedor.value.trim());
+    if (proveedor) {
+        params.append('proveedor', proveedor);
     }
-    if (searchNumero.value.trim()) {
-        params.append('numeroContrato', searchNumero.value.trim());
+    if (numero) {
+        params.append('numeroContrato', numero);
     }
 
     const url = `${API_URL}/api/contratos${params.toString() ? '?' + params.toString() : ''}`;
@@ -57,7 +60,9 @@ async function cargarContratos() {
         console.log('✅ Respuesta:', data);
 
         if (data.ok && Array.isArray(data.contratos)) {
-            mostrarContratos(data.contratos);
+            contratosData = data.contratos;
+            popularListasSugerencias(); // Popular sugerencias en modal
+            mostrarContratos(contratosData);
         } else {
             mostrarError('Error al cargar contratos');
         }
@@ -106,8 +111,74 @@ function mostrarContratos(contratos) {
             const id = card.getAttribute('data-id');
             console.log('🔗 Redirigiendo a detalle con ID:', id);
             window.location.href = `/pages/detalle.html#id=${id}`;
-
         });
+    });
+}
+
+/**************************************************
+ * MODAL FILTROS
+ **************************************************/
+function abrirModalFiltros() {
+    modalFiltros.style.display = 'flex';
+}
+
+function cerrarModalFiltros() {
+    modalFiltros.style.display = 'none';
+}
+
+function limpiarFiltros() {
+    filtroProveedor.value = '';
+    filtroNumero.value = '';
+    aplicarFiltros();
+}
+
+function aplicarFiltros() {
+    cargarContratos();
+    cerrarModalFiltros();
+}
+
+/**************************************************
+ * AUTOCOMPLETE PARA FILTROS
+ **************************************************/
+function popularListasSugerencias() {
+    // Números de contrato únicos
+    const numerosUnicos = [...new Set(contratosData.map(c => c.numeroContrato).filter(Boolean))];
+
+    // Proveedores únicos
+    const proveedoresUnicos = [...new Set(contratosData.map(c => c.proveedor).filter(Boolean))];
+
+    setupAutocomplete('filtroNumeroContrato', 'autoCompleteNumero', numerosUnicos);
+    setupAutocomplete('filtroProveedor', 'autoCompleteProveedor', proveedoresUnicos);
+}
+
+function setupAutocomplete(inputId, listId, dataList) {
+    const input = document.getElementById(inputId);
+    const list = document.getElementById(listId);
+
+    function showSuggestions(suggestions) {
+        list.innerHTML = '';
+        suggestions.forEach(sug => {
+            const div = document.createElement('div');
+            div.textContent = sug;
+            div.addEventListener('click', () => {
+                input.value = sug;
+                list.style.display = 'none';
+            });
+            list.appendChild(div);
+        });
+        list.style.display = suggestions.length ? 'block' : 'none';
+    }
+
+    input.addEventListener('focus', () => showSuggestions(dataList));
+
+    input.addEventListener('input', () => {
+        const val = normalize(input.value);
+        const filtered = dataList.filter(item => normalize(item).includes(val));
+        showSuggestions(filtered);
+    });
+
+    document.addEventListener('click', e => {
+        if (e.target !== input) list.style.display = 'none';
     });
 }
 
@@ -195,4 +266,9 @@ function mostrarError(msg) {
             </button>
         </div>
     `;
+}
+
+// Placeholder para exportarExcel
+function exportarExcel() {
+    alert('📥 Funcionalidad en desarrollo');
 }
