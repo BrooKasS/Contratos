@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node src/index.ts"
+    
   },
   "keywords": [],
   "author": "",
@@ -19,7 +20,8 @@
     "express-fileupload": "^1.5.2",
     "pg": "^8.18.0",
     "prisma": "^7.3.0",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "xpress": "^2.4.6"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

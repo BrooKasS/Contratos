@@ -57,6 +57,48 @@ function buildDate(dia: any, mes: any, anio: any): string {
   return isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10);
 }
 
+/**
+ * Parsea una fecha desde múltiples formatos: número Excel, string DD/MM/YYYY, o componentes
+ */
+function parseDateFromString(dateStr: any): string {
+  if (!dateStr) return "";
+  
+  const str = cellText(dateStr).trim();
+  if (!str) return "";
+  
+  // Intenta primero como número de Excel (fallback)
+  const numValue = parseInt(str, 10);
+  if (!isNaN(numValue) && numValue > 0 && numValue < 100000) {
+    const excelDate = tryExcelDateToISO(numValue);
+    if (excelDate) return excelDate;
+  }
+  
+  // Busca el patrón DD/MM/YYYY en el string
+  const match = str.match(/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/);
+  if (!match) return "";
+  
+  const d = parseInt(match[1], 10);
+  const m = parseInt(match[2], 10);
+  const a = parseInt(match[3], 10);
+  
+  // Validación básica (igual que buildDate)
+  if (isNaN(d) || isNaN(m) || isNaN(a)) return "";
+  if (d < 1 || d > 31 || m < 1 || m > 12) return "";
+  
+  const yyyy = a < 100 ? (a >= 50 ? 1900 + a : 2000 + a) : a;
+  const date = new Date(yyyy, m - 1, d);
+  
+  return isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10);
+}
+
+/**
+ * Busca una fecha en formato DD/MM/YYYY en el contenido de texto
+ */
+function extractDateFromText(text: string): string {
+  if (!text) return "";
+  return parseDateFromString(text);
+}
+
 export function extraerGeneralidades(
   buffer: Buffer,
   fileName = "informe.xlsx"
@@ -85,23 +127,71 @@ export function extraerGeneralidades(
     }
   }
 
-  // 2) Extraer Fecha del Informe (está en fila 2, aprox)
+  // 2) Extraer Fecha del Informe
+  // Primero: busca DD/MM/YYYY o número Excel en TODAS las celdas de las primeras 20 filas
   let fechaInforme = "";
-  for (let r = 0; r < Math.min(5, rows.length); r++) {
+  
+  for (let r = 0; r < Math.min(20, rows.length) && !fechaInforme; r++) {
     const row = rows[r] ?? [];
-    for (let c = 0; c < row.length; c++) {
-      const label = normalizeLoose(row[c]);
-      if (label.includes("fecha")) {
-        // Buscar día, mes, año en las siguientes columnas
-        // Formato: Fecha: [col+1]=día [col+3]=mes [col+5]=año
-        const dia = row[c + 1];
-        const mes = row[c + 3];
-        const anio = row[c + 5];
-        fechaInforme = buildDate(dia, mes, anio);
-        if (fechaInforme) break;
+    
+    for (let c = 0; c < row.length && !fechaInforme; c++) {
+      const cellValue = cellText(row[c]);
+      const rawValue = row[c];
+      
+      // Intenta parsear como cualquier formato de fecha
+      fechaInforme = parseDateFromString(cellValue);
+      
+      // Si la celda es un número crudo, intenta como Excel date number
+      if (!fechaInforme && typeof rawValue === "number") {
+        fechaInforme = tryExcelDateToISO(rawValue) ?? "";
+      }
+      
+      // Si la celda es un objeto con propiedades (XLSX puede guardar así), intenta los valores
+      if (!fechaInforme && typeof rawValue === "object" && rawValue !== null) {
+        fechaInforme = parseDateFromString((rawValue.v ?? rawValue.w ?? rawValue.t ?? "").toString());
+        if (!fechaInforme && rawValue.v && typeof rawValue.v === "number") {
+          fechaInforme = tryExcelDateToISO(rawValue.v) ?? "";
+        }
       }
     }
-    if (fechaInforme) break;
+  }
+  
+  // Segundo: si sigue sin encontrar, busca con lógica de "fecha" + adjacentes + bloques
+  if (!fechaInforme) {
+    for (let r = 0; r < Math.min(20, rows.length); r++) {
+      if (fechaInforme) break;
+      
+      const row = rows[r] ?? [];
+      
+      for (let c = 0; c < row.length; c++) {
+        const cellValue = cellText(row[c]);
+        const label = normalizeLoose(cellValue);
+        
+        if (label.includes("fecha")) {
+          // Busca en las siguientes 10 celdas
+          for (let offset = 1; offset <= 10; offset++) {
+            if (c + offset >= row.length) break;
+            const nextCell = row[c + offset];
+            fechaInforme = parseDateFromString(cellText(nextCell));
+            if (!fechaInforme && typeof nextCell === "number") {
+              fechaInforme = tryExcelDateToISO(nextCell) ?? "";
+    
+            }
+            if (fechaInforme) break;
+          }
+          
+          // Si sigue sin encontrar, intenta método de bloques
+          if (!fechaInforme) {
+            const dia = row[c + 1];
+            const mes = row[c + 3];
+            const anio = row[c + 5];
+            fechaInforme = buildDate(dia, mes, anio);
+          }
+          
+          if (fechaInforme) break;
+        }
+      }
+    }
   }
 
   // 3) Función helper para buscar un campo en el rango de generalidades
