@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000';
+const API_URL = 'http://localhost:3001';
 const loadingSpinner = document.getElementById('loadingSpinner');
 const tableContainer = document.getElementById('tableContainer');
 const tableBody = document.getElementById('tableBody');

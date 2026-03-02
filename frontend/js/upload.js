@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000';
+const API_URL = 'http://localhost:3001';
 
 const fileInput = document.getElementById('fileInput');
 const fileLabel = document.getElementById('fileLabel');
