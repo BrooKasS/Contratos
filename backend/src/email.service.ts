@@ -1,11 +1,10 @@
-// backend/src/email.service.ts
 import "dotenv/config";
 import nodemailer from "nodemailer";
 
 export const transporter = nodemailer.createTransport({
-  host: "smtp.office365.com",
-  port: 587,
-  secure: false,
+  host: process.env.EMAIL_HOST,        // smtp-mail.outlook.com
+  port: Number(process.env.EMAIL_PORT),// 587
+  secure: false,                       // STARTTLS
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -17,7 +16,7 @@ export async function enviarAlertaContrato(destino: string, contrato: any) {
 
   await transporter.sendMail({
     from: `Sistema de Contratos <${process.env.EMAIL_USER}>`,
-    to: destino,
+    to: process.env.EMAIL_USER,
     subject: "⚠ Contrato próximo a vencer",
     html: `
       <h2>Alerta de Vencimiento</h2>
